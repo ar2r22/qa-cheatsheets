@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 SQL для тестировщиков</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:21px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.3px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12.5px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:#c792ea;}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+
+  table.restbl{border-collapse:collapse;margin-top:8px;font-size:11.5px;width:100%;}
+  table.restbl th{
+    text-align:left;color:var(--cyan);
+    border-bottom:1px solid var(--panel-border);
+    padding:4px 8px 4px 0;
+  }
+  table.restbl td{
+    color:var(--muted);
+    padding:4px 8px 4px 0;
+    border-bottom:1px solid #161c26;
+  }
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>SQL</span> для тестировщиков</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">SQL-запросы для проверки и подготовки тестовых данных</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"SELECT + WHERE", name:"Выборка с условием", cat:"Проверка данных",
+   code:`<span class="kw">SELECT</span> id, email, status
+<span class="kw">FROM</span> users
+<span class="kw">WHERE</span> status = <span class="str">'blocked'</span>;`,
+   cols:["id","email","status"],
+   rows:[["14","a@mail.com","blocked"],["27","b@mail.com","blocked"]],
+   what:"Базовый запрос: выбрать нужные столбцы из таблицы и отфильтровать строки по условию. Для тестировщика это способ напрямую проверить, что данные в БД соответствуют тому, что показывает UI — например, действительно ли пользователь помечен заблокированным после теста.",
+   breakdown:[
+     {c:"SELECT id, email, status", e:"какие столбцы вернуть (вместо * лучше явно перечислять нужные)"},
+     {c:"FROM users", e:"из какой таблицы брать данные"},
+     {c:"WHERE status = 'blocked'", e:"условие фильтрации строк — вернутся только подходящие"}
+   ],
+   custom:"Замените <b>users</b> и <b>status</b> на реальные имена таблицы/столбца в <b>вашей</b> БД (узнать структуру: <code>DESCRIBE users;</code> в MySQL или <code>\\d users</code> в Postgres).",
+   tip:"Всегда проверяйте данные в БД после UI-действия — это помогает отличить баг отображения от реального бага сохранения данных."},
+
+  {cmd:"JOIN", name:"Связанные таблицы", cat:"Проверка данных",
+   code:`<span class="kw">SELECT</span> o.id, u.email, o.total
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> users u <span class="kw">ON</span> o.user_id = u.id
+<span class="kw">WHERE</span> o.status = <span class="str">'paid'</span>;`,
+   cols:["id","email","total"],
+   rows:[["1042","a@mail.com","59.90"],["1043","c@mail.com","12.50"]],
+   what:"Объединяет строки из двух (или более) таблиц по связывающему полю. Нужен, когда проверяемые данные 'размазаны' по нескольким таблицам — например заказ хранится в orders, а email покупателя в users.",
+   breakdown:[
+     {c:"orders o", e:"основная таблица с коротким псевдонимом (alias) для удобства"},
+     {c:"JOIN users u", e:"присоединяемая таблица, тоже с псевдонимом"},
+     {c:"ON o.user_id = u.id", e:"условие связи — какое поле одной таблицы соответствует какому полю другой"}
+   ],
+   custom:"Найдите в схеме <b>вашей</b> БД, какое поле в одной таблице ссылается на другую (обычно это *_id, например user_id) — это и есть условие ON.",
+   tip:"Если результат пустой, хотя данные в обеих таблицах есть — проверьте тип и формат связываемых полей (например int vs varchar) — частая причина несостыковки в тестовых данных."},
+
+  {cmd:"COUNT / GROUP BY", name:"Подсчёт и группировка", cat:"Проверка данных",
+   code:`<span class="kw">SELECT</span> status, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> cnt
+<span class="kw">FROM</span> orders
+<span class="kw">GROUP BY</span> status;`,
+   cols:["status","cnt"],
+   rows:[["paid","128"],["pending","14"],["cancelled","6"]],
+   what:"Считает количество строк в каждой группе значений — например сколько заказов в каждом статусе. Быстрый способ проверить общие числа без ручного пересчёта в UI, особенно на больших объёмах данных.",
+   breakdown:[
+     {c:"COUNT(*)", e:"количество строк в группе"},
+     {c:"AS cnt", e:"алиас — как назвать получившийся столбец в результате"},
+     {c:"GROUP BY status", e:"по какому полю группировать строки перед подсчётом"}
+   ],
+   custom:"Замените <b>status</b> на поле <b>вашей</b> таблицы, по которому нужна сводка (например категория товара, роль пользователя). Сверьте результат с цифрой, которую показывает дашборд/отчёт в UI — расхождение укажет на баг.",
+   tip:"HAVING работает как WHERE, но после группировки: GROUP BY status HAVING COUNT(*) > 100 — найти статусы с более чем 100 записей."},
+
+  {cmd:"ORDER BY / LIMIT", name:"Сортировка и ограничение", cat:"Проверка данных",
+   code:`<span class="kw">SELECT</span> id, created_at, total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> created_at <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">5</span>;`,
+   cols:["id","created_at","total"],
+   rows:[["1050","2026-10-29 12:40","22.00"],["1049","2026-10-29 11:05","8.40"]],
+   what:"Сортирует результат по указанному полю и ограничивает число возвращаемых строк. Классика для 'покажи 5 последних заказов' — проверить, что свежесозданная тестовая запись реально попала в БД.",
+   breakdown:[
+     {c:"ORDER BY created_at DESC", e:"сортировать по дате создания, от новых к старым"},
+     {c:"LIMIT 5", e:"вернуть только первые 5 строк результата"}
+   ],
+   custom:"Сразу после создания тестовой записи через UI/API выполните такой запрос к <b>вашей</b> таблице — свежая запись должна оказаться первой при сортировке по дате создания DESC.",
+   tip:"ASC вместо DESC — сортировка по возрастанию (от старых к новым, от меньшего к большему)."},
+
+  {cmd:"INSERT", name:"Создание тестовых данных", cat:"Подготовка данных",
+   code:`<span class="kw">INSERT INTO</span> users (email, status, role)
+<span class="kw">VALUES</span> (<span class="str">'qa_test1@mail.com'</span>, <span class="str">'active'</span>, <span class="str">'customer'</span>);`,
+   cols:["résult"],
+   rows:[["1 row inserted, id = 301"]],
+   what:"Добавляет новую строку в таблицу напрямую, в обход UI. Полезно, когда нужно быстро создать специфичные тестовые данные (например 1000 пользователей для проверки пагинации) без ручного заполнения форм.",
+   breakdown:[
+     {c:"INSERT INTO users (...)", e:"в какую таблицу и в какие столбцы вставляем значения"},
+     {c:"VALUES (...)", e:"сами значения, в том же порядке, что и перечисленные столбцы"}
+   ],
+   custom:"Подставьте реальные имена столбцов и обязательные поля <b>вашей</b> таблицы (узнать через DESCRIBE/\\d) — если забыть NOT NULL поле без значения по умолчанию, запрос вернёт ошибку.",
+   warn:"Выполняйте INSERT только на тестовой/staging базе — никогда на продакшене, даже 'ради проверки'."},
+
+  {cmd:"UPDATE", name:"Изменение тестовых данных", cat:"Подготовка данных",
+   code:`<span class="kw">UPDATE</span> users
+<span class="kw">SET</span> status = <span class="str">'blocked'</span>
+<span class="kw">WHERE</span> id = <span class="num">301</span>;`,
+   cols:["result"],
+   rows:[["1 row updated"]],
+   what:"Изменяет значения в уже существующих строках. Удобно, чтобы быстро перевести тестового пользователя в нужное состояние (заблокирован, без подтверждённого email и т.п.), не проходя весь путь через UI заново.",
+   breakdown:[
+     {c:"SET status = 'blocked'", e:"какое поле и на какое значение меняем"},
+     {c:"WHERE id = 301", e:"критически важная часть — без неё обновятся ВСЕ строки таблицы"}
+   ],
+   custom:"Замените <b>id = 301</b> на ID конкретной тестовой записи <b>вашего</b> проекта. Перед реальным запуском выполните сначала такой же WHERE в SELECT — убедитесь, что он выбирает именно ту (и только ту) строку.",
+   warn:"UPDATE без WHERE изменит абсолютно все строки таблицы — одна из самых частых и болезненных ошибок при ручной работе с БД."},
+
+  {cmd:"DELETE", name:"Очистка тестовых данных", cat:"Подготовка данных",
+   code:`<span class="kw">DELETE FROM</span> orders
+<span class="kw">WHERE</span> user_id = <span class="num">301</span> <span class="kw">AND</span> status = <span class="str">'test'</span>;`,
+   cols:["result"],
+   rows:[["3 rows deleted"]],
+   what:"Удаляет строки из таблицы. Нужен для очистки мусора после тестов — например удалить все заказы, созданные тестовым пользователем, чтобы не засорять тестовую БД перед следующим прогоном.",
+   breakdown:[
+     {c:"DELETE FROM orders", e:"из какой таблицы удаляем строки"},
+     {c:"WHERE user_id = 301 AND status = 'test'", e:"условие — удалятся только строки, подходящие под ОБА условия"}
+   ],
+   custom:"Всегда сначала выполните тот же WHERE как SELECT (<code>SELECT * FROM orders WHERE user_id = 301 AND status = 'test'</code>) на <b>вашей</b> базе и убедитесь, что видите именно те строки, которые собираетесь удалить.",
+   warn:"DELETE без WHERE удалит все строки таблицы без возможности простого отката, если нет транзакции или бэкапа — выполняйте только на тестовой БД и с осторожностью."},
+
+  {cmd:"IS NULL", name:"Поиск пропущенных данных", cat:"Поиск багов",
+   code:`<span class="kw">SELECT</span> id, email, phone
+<span class="kw">FROM</span> users
+<span class="kw">WHERE</span> phone <span class="kw">IS NULL</span> <span class="kw">AND</span> status = <span class="str">'active'</span>;`,
+   cols:["id","email","phone"],
+   rows:[["55","d@mail.com","NULL"],["61","e@mail.com","NULL"]],
+   what:"Находит строки, где значение поля отсутствует (NULL — это не пустая строка, а именно 'значения нет'). Отличный способ найти баги сохранения данных: например активных пользователей, у которых почему-то не сохранился телефон.",
+   breakdown:[
+     {c:"IS NULL", e:"проверка на отсутствие значения (обычное сравнение phone = NULL работать НЕ будет)"},
+     {c:"IS NOT NULL", e:"обратная проверка — поле заполнено"}
+   ],
+   custom:"Подставьте поле <b>вашей</b> таблицы, которое по бизнес-логике не должно быть пустым (email, phone, order_total) — такой запрос быстро находит данные, 'потерянные' из-за бага в форме или API.",
+   tip:"Это одна из самых полезных проверок для регрессионного тестирования форм — пустые обязательные поля сразу видны."},
+
+  {cmd:"DISTINCT", name:"Уникальные значения / дубли", cat:"Поиск багов",
+   code:`<span class="kw">SELECT DISTINCT</span> email
+<span class="kw">FROM</span> users;
+
+<span class="com">-- найти дубли:</span>
+<span class="kw">SELECT</span> email, <span class="fn">COUNT</span>(*)
+<span class="kw">FROM</span> users
+<span class="kw">GROUP BY</span> email <span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; <span class="num">1</span>;`,
+   cols:["email","count"],
+   rows:[["dup@mail.com","2"]],
+   what:"DISTINCT убирает повторяющиеся значения из результата. В паре с GROUP BY + HAVING — находит дубликаты, которых по бизнес-правилам быть не должно (например два пользователя с одинаковым email).",
+   breakdown:[
+     {c:"SELECT DISTINCT email", e:"вернуть каждое уникальное значение email только один раз"},
+     {c:"GROUP BY email HAVING COUNT(*) > 1", e:"сгруппировать по email и оставить только те группы, где больше одной строки — то есть дубли"}
+   ],
+   custom:"Замените <b>email</b> на поле <b>вашей</b> таблицы, уникальность которого важна для бизнес-логики (номер заказа, логин, артикул товара).",
+   tip:"Если в БД есть UNIQUE constraint на поле, дублей в теории быть не должно — их появление само по себе признак серьёзного бага."},
+
+  {cmd:"Transactions", name:"BEGIN / ROLLBACK", cat:"Безопасная работа с БД",
+   code:`<span class="kw">BEGIN</span>;
+<span class="kw">DELETE FROM</span> orders <span class="kw">WHERE</span> status = <span class="str">'test'</span>;
+<span class="com">-- проверяем результат...</span>
+<span class="kw">ROLLBACK</span>; <span class="com">-- или COMMIT;</span>`,
+   cols:["result"],
+   rows:[["изменения отменены (ROLLBACK), БД как до запроса"]],
+   what:"Транзакция объединяет несколько операций в одну 'единицу работы': можно выполнить изменения, посмотреть на результат, и либо подтвердить их (COMMIT), либо полностью отменить (ROLLBACK) — как будто ничего и не было.",
+   breakdown:[
+     {c:"BEGIN", e:"начать транзакцию — последующие изменения пока не применяются окончательно"},
+     {c:"ROLLBACK", e:"отменить все изменения, сделанные с начала транзакции"},
+     {c:"COMMIT", e:"зафиксировать изменения окончательно и необратимо"}
+   ],
+   custom:"Перед любым 'опасным' UPDATE/DELETE на <b>вашей</b> тестовой БД начинайте с BEGIN — если результат не тот, что ожидался, просто выполните ROLLBACK вместо восстановления из бэкапа.",
+   tip:"Это самый безопасный способ 'потренироваться' писать DELETE/UPDATE, не боясь необратимо сломать тестовые данные."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+  const theadHTML = `<tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>`;
+  const tbodyHTML = t.rows.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">query.sql</div>
+      </div>
+      <div class="term-body">
+        <pre>${t.code}</pre>
+        <table class="restbl"><thead>${theadHTML}</thead><tbody>${tbodyHTML}</tbody></table>
+      </div>
+    </div>
+
+    <div class="section-title">🗄 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Для чего нужно</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор запроса</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

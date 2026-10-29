@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QA Cheatsheets — главная</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:28px 16px 48px;}
+  header{text-align:center;margin-bottom:34px;}
+  h1{font-size:26px;margin:0 0 8px;letter-spacing:.2px;}
+  h1 span{color:var(--cyan);}
+  .subtitle{color:var(--muted);font-size:13px;}
+
+  .group{margin-bottom:16px;border-bottom:1px solid var(--panel-border);padding-bottom:16px;}
+  .group:last-child{border-bottom:none;}
+  .group-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:14px;
+    cursor:pointer;
+    user-select:none;
+    padding:4px 0;
+  }
+  .group-icon{font-size:18px;}
+  .group-title{font-size:15px;font-weight:700;letter-spacing:.3px;}
+  .group-count{font-size:11px;color:var(--muted);font-weight:400;}
+  .group-title.manual{color:var(--green);}
+  .group-title.general{color:var(--cyan);}
+  .group-title.automation{color:var(--orange);}
+  .group-line{flex:1;height:1px;background:var(--panel-border);}
+  .chevron{
+    font-size:12px;color:var(--muted);
+    transition:transform .2s ease;
+    flex:0 0 auto;
+  }
+  .group.collapsed .chevron{transform:rotate(-90deg);}
+  .group-desc{color:var(--muted);font-size:11.5px;margin:-8px 0 14px 28px;}
+  .group.collapsed .group-desc{display:none;}
+
+  .grid-wrap{
+    display:grid;
+    grid-template-rows:1fr;
+    transition:grid-template-rows .25s ease;
+  }
+  .group.collapsed .grid-wrap{grid-template-rows:0fr;}
+  .grid-inner{overflow:hidden;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px,1fr));
+    gap:12px;
+  }
+  a.card{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:14px 16px;
+    text-decoration:none;
+    color:var(--text);
+    transition:border-color .15s, transform .1s;
+  }
+  a.card:hover{border-color:var(--cyan);transform:translateY(-1px);}
+  .card .icon{font-size:20px;}
+  .card .title{font-size:13.5px;font-weight:700;}
+  .card .desc{font-size:11px;color:var(--muted);line-height:1.4;}
+  .card .arrow{margin-top:4px;font-size:11px;color:var(--cyan);}
+
+  .manual-card:hover{border-color:var(--green);}
+  .manual-card .arrow{color:var(--green);}
+  .automation-card:hover{border-color:var(--orange);}
+  .automation-card .arrow{color:var(--orange);}
+
+  footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:30px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>QA <span>Cheatsheets</span></h1>
+    <div class="subtitle">Памятки и шпаргалки для тестировщиков — от основ до автоматизации</div>
+  </header>
+
+  <div class="group" id="group-manual">
+    <div class="group-head" data-target="group-manual">
+      <span class="group-icon">🧪</span>
+      <span class="group-title manual">Ручное тестирование <span class="group-count">(3)</span></span>
+      <span class="group-line"></span>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="group-desc">Основы профессии и повседневные инструменты ручного QA</div>
+    <div class="grid-wrap"><div class="grid-inner"><div class="grid">
+      <a class="card manual-card" href="manual-qa-top10.html">
+        <div class="icon">📋</div>
+        <div class="title">Top 10 Manual Testing</div>
+        <div class="desc">Тест-кейсы, баг-репорты, исследовательское тестирование, техники тест-дизайна</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card manual-card" href="devtools-qa-top10.html">
+        <div class="icon">🛠</div>
+        <div class="title">Top 10 Chrome DevTools</div>
+        <div class="desc">Elements, Console, Network, Application, эмуляция устройств и сети</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card manual-card" href="postman-api-top10.html">
+        <div class="icon">📮</div>
+        <div class="title">Top 10 API + Postman</div>
+        <div class="desc">Методы, окружения, авторизация, тесты, коллекции и Newman</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+    </div></div></div>
+  </div>
+
+  <div class="group" id="group-general">
+    <div class="group-head" data-target="group-general">
+      <span class="group-icon">🧩</span>
+      <span class="group-title general">Общие знания <span class="group-count">(8)</span></span>
+      <span class="group-line"></span>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="group-desc">Инструменты и концепции, полезные и в ручном, и в автоматизированном тестировании</div>
+    <div class="grid-wrap"><div class="grid-inner"><div class="grid">
+      <a class="card" href="linux-qa-top10.html">
+        <div class="icon">🐧</div>
+        <div class="title">Top 10 Linux для тестировщиков</div>
+        <div class="desc">grep, tail -f, curl, ps/kill, netstat, права доступа</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="sql-qa-top10.html">
+        <div class="icon">🗄</div>
+        <div class="title">Top 10 SQL для тестировщиков</div>
+        <div class="desc">SELECT, JOIN, подготовка и очистка тестовых данных, транзакции</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="git-qa-top10.html">
+        <div class="icon">🔀</div>
+        <div class="title">Top 10 Git для тестировщиков</div>
+        <div class="desc">clone, status, branch, log, diff, bisect, blame</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="microservices-testing-top10.html">
+        <div class="icon">🧬</div>
+        <div class="title">Тестирование микросервисов</div>
+        <div class="desc">Contract testing, трассировка, chaos engineering, идемпотентность</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="kafka-qa-top10.html">
+        <div class="icon">📨</div>
+        <div class="title">Top 10 Kafka для тестировщика</div>
+        <div class="desc">Topic, offset, consumer group, Schema Registry, DLQ, lag</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="rabbitmq-qa-top10.html">
+        <div class="icon">🐇</div>
+        <div class="title">Top 10 RabbitMQ для тестировщика</div>
+        <div class="desc">Exchange, binding, ack/nack, DLX, durability, TTL</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="k8s-qa-top10.html">
+        <div class="icon">☸️</div>
+        <div class="title">Top 10 Kubernetes для тестировщика</div>
+        <div class="desc">Port-forward через Lens, логи, exec, ConfigMap, namespace</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card" href="ai-prompts-qa-top10.html">
+        <div class="icon">🤖</div>
+        <div class="title">Top 10 AI-промптов для QA</div>
+        <div class="desc">Готовые шаблоны промптов на каждый день с кнопкой Copy</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+    </div></div></div>
+  </div>
+
+  <div class="group" id="group-automation">
+    <div class="group-head" data-target="group-automation">
+      <span class="group-icon">⚙️</span>
+      <span class="group-title automation">Автоматизация <span class="group-count">(2)</span></span>
+      <span class="group-line"></span>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="group-desc">Фреймворки и инфраструктура для написания и поддержки автотестов</div>
+    <div class="grid-wrap"><div class="grid-inner"><div class="grid">
+      <a class="card automation-card" href="playwright-ts-top10.html">
+        <div class="icon">🎭</div>
+        <div class="title">Top 10 Playwright + TS</div>
+        <div class="desc">Locators, fixtures, Page Object, API testing, CI-конфиг</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+      <a class="card automation-card" href="git-automation-top10.html">
+        <div class="icon">⚙️</div>
+        <div class="title">Git для автоматизации тестирования</div>
+        <div class="desc">.gitignore, tag, rebase, hooks, worktree, submodule, CI</div>
+        <div class="arrow">Открыть →</div>
+      </a>
+    </div></div></div>
+  </div>
+
+  <footer>QA Cheatsheets · памятки для тестировщиков всех уровней · клик по заголовку раздела сворачивает/разворачивает его</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.group-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const group = document.getElementById(head.dataset.target);
+      group.classList.toggle('collapsed');
+    });
+  });
+</script>
+</body>
+</html>

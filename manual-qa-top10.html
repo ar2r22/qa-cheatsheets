@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Manual Testing</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:23px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.5px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:13px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  .row{display:flex;gap:8px;margin-bottom:4px;}
+  .row b{color:var(--cyan);flex:0 0 110px;}
+  .out{color:var(--muted);margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.5;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Manual Testing</span></h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Основы ручного тестирования · для начинающих QA</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Test Case", name:"Тест-кейс", cat:"Проектирование",
+   rows:[["ID","TC-014"],["Шаги","1. Открыть форму логина\n2. Ввести valid user/pass\n3. Нажать 'Войти'"],["Ожидаемо","Переход на главную страницу"]],
+   out:"Статус: PASS",
+   what:"Тест-кейс — это пошаговая инструкция с чёткими действиями и ожидаемым результатом. Он нужен, чтобы любой тестировщик (или вы сами через месяц) мог повторить проверку одинаково и однозначно понять, прошла она или нет.",
+   breakdown:[
+     {c:"Предусловия", e:"что должно быть готово до старта (например: пользователь зарегистрирован)"},
+     {c:"Шаги", e:"пронумерованные действия — чем конкретнее, тем меньше разночтений"},
+     {c:"Ожидаемый результат", e:"что система должна показать/сделать, если всё работает правильно"}
+   ],
+   custom:"Замените форму логина на экран/функцию <b>вашего</b> приложения. Для каждого кейса держите в голове вопрос: «Сможет ли другой человек выполнить это, вообще не зная продукт?» — если нет, шаги нужно детализировать.",
+   tip:"Пишите один тест-кейс = одна проверяемая идея. Так проще искать причину, если он падает."},
+
+  {cmd:"Bug Report", name:"Баг-репорт", cat:"Документирование",
+   rows:[["Заголовок","Кнопка 'Купить' не активна при валидной корзине"],["Severity","High"],["Priority","P2"]],
+   out:"Шаги: 1. Добавить товар\n2. Перейти в корзину\n3. Нажать 'Купить' → кнопка не реагирует",
+   what:"Баг-репорт — формализованное описание найденной проблемы, которое разработчик может воспроизвести и исправить без лишних вопросов вам.",
+   breakdown:[
+     {c:"Заголовок", e:"коротко и конкретно: что сломано и при каких условиях"},
+     {c:"Шаги воспроизведения", e:"минимальный набор действий, после которых баг стабильно повторяется"},
+     {c:"Фактический / ожидаемый результат", e:"что произошло на самом деле vs что должно было произойти"},
+     {c:"Окружение", e:"браузер/ОС/версия приложения — баги часто специфичны для среды"}
+   ],
+   custom:"Подставляйте реальные шаги и скриншоты из <b>вашего</b> тестируемого приложения. Всегда проверяйте баг минимум дважды, прежде чем заводить — «не воспроизводится» тратит время всей команды.",
+   tip:"Прикладывайте скриншот/видео — это сокращает цикл уточнений с разработчиком в разы."},
+
+  {cmd:"Exploratory", name:"Исследовательское тест.", cat:"Техника",
+   rows:[["Чартер","Проверить работу фильтров каталога без заранее написанных кейсов"],["Время","30 минут"]],
+   out:"Найдено: фильтр 'цена от-до' не сбрасывается при смене категории",
+   what:"Одновременное изучение продукта и его тестирование без заранее написанного сценария — вы исследуете систему, формируя гипотезы 'а что если...' на ходу.",
+   breakdown:[
+     {c:"Чартер (charter)", e:"короткая цель сессии — область, которую исследуете, а не точный сценарий"},
+     {c:"Тайм-бокс", e:"ограничение по времени (обычно 30–90 минут), чтобы сессия была сфокусированной"},
+     {c:"Заметки по ходу", e:"фиксация находок и идей для новых проверок прямо во время сессии"}
+   ],
+   custom:"Выберите модуль <b>вашего</b> продукта, который меньше всего покрыт формальными тест-кейсами, и исследуйте именно его — так находки будут максимально полезны.",
+   tip:"Отлично дополняет формальные тест-кейсы: находит баги на стыках функций, которые кейсы часто не покрывают."},
+
+  {cmd:"Equivalence", name:"Классы эквивалентности", cat:"Техника",
+   rows:[["Поле","Возраст (допустимо 18–65)"],["Классы","<18 (невалидный) | 18–65 (валидный) | >65 (невалидный)"]],
+   out:"Достаточно проверить по одному значению из каждого класса",
+   what:"Техника тест-дизайна: входные данные делятся на группы ('классы'), внутри которых система должна вести себя одинаково. Вместо перебора всех значений достаточно проверить по одному представителю из каждого класса.",
+   breakdown:[
+     {c:"Валидный класс", e:"значения, которые система должна принять"},
+     {c:"Невалидный класс", e:"значения, которые система должна отклонить (с понятной ошибкой)"},
+     {c:"Представитель класса", e:"одно значение из группы, которое проверяется вместо всех"}
+   ],
+   custom:"Возьмите любое поле ввода <b>вашего</b> приложения (email, количество товара, купон) и определите его реальные границы допустимости — часто это написано в требованиях или коде валидации.",
+   tip:"Резко сокращает число тест-кейсов без потери качества покрытия — ключевая техника для ограниченного времени на тестирование."},
+
+  {cmd:"Boundary Value", name:"Граничные значения", cat:"Техника",
+   rows:[["Диапазон","1–100 (количество товара)"],["Проверить","0, 1, 2, 99, 100, 101"]],
+   out:"Баг: при вводе 0 товар добавляется в корзину",
+   what:"Техника, основанная на наблюдении: ошибки чаще всего прячутся на границах диапазонов, а не в середине. Проверяются значения точно на границе и сразу за ней.",
+   breakdown:[
+     {c:"min-1 / min / min+1", e:"значение чуть ниже границы, на границе и чуть выше"},
+     {c:"max-1 / max / max+1", e:"то же самое для верхней границы"}
+   ],
+   custom:"Для <b>вашего</b> поля с ограничением (длина пароля, сумма перевода, дата) выпишите именно эти 6 значений и проверьте их отдельно от 'обычных' кейсов.",
+   tip:"Используйте вместе с классами эквивалентности — это классическая пара техник в ручном тестировании."},
+
+  {cmd:"Smoke Test", name:"Дымовое тестирование", cat:"Стратегия",
+   rows:[["Когда","Сразу после новой сборки (билда)"],["Проверяем","Логин, главная страница, оформление заказа"]],
+   out:"Статус сборки: СТАБИЛЬНА — можно тестировать дальше",
+   what:"Быстрая поверхностная проверка самых критичных функций сразу после получения новой сборки — чтобы понять, имеет ли смысл тратить время на полное тестирование, или сборка 'развалена'.",
+   breakdown:[
+     {c:"Набор smoke-кейсов", e:"5–15 самых критичных сценариев продукта (не всё приложение!)"},
+     {c:"Быстрое выполнение", e:"обычно занимает 10–30 минут, не больше"}
+   ],
+   custom:"Выпишите 5–10 действий, без которых <b>ваш</b> продукт вообще не имеет смысла использовать (например: вход, создание заказа, оплата) — это и будет ваш smoke-набор.",
+   tip:"Если smoke test падает — сборка возвращается разработчикам немедленно, дальше тестировать бессмысленно."},
+
+  {cmd:"Regression", name:"Регрессионное тест.", cat:"Стратегия",
+   rows:[["Повод","Исправили баг в корзине"],["Проверяем повторно","Оформление заказа, промокоды, доставка"]],
+   out:"Старые функции не сломались изменением",
+   what:"Повторная проверка уже протестированных функций после изменений в коде — чтобы убедиться, что исправление одного бага или новая фича не сломали то, что раньше работало.",
+   breakdown:[
+     {c:"Регрессионный набор", e:"набор кейсов, покрывающих ключевые/часто ломающиеся области продукта"},
+     {c:"Область затронутых изменений", e:"модули, которые логически связаны с изменённым кодом — их проверяют в первую очередь"}
+   ],
+   custom:"После любого фикса в <b>вашем</b> проекте проверяйте не только сам баг, но и соседние функции того же модуля — баги любят 'расползаться'.",
+   tip:"Повторяющиеся регрессионные прогоны — первые кандидаты на автоматизацию, если делаете их вручную каждый релиз."},
+
+  {cmd:"Checklist", name:"Чек-лист", cat:"Проектирование",
+   rows:[["Раздел","Форма регистрации"],["Пункты","☐ Валидация email\n☐ Пароль скрыт звёздочками\n☐ Кнопка недоступна при пустых полях"]],
+   out:"7 из 10 пунктов пройдено",
+   what:"Более лёгкая альтернатива детальным тест-кейсам: список коротких пунктов-проверок без жёстко расписанных шагов — быстрее писать, быстрее проходить.",
+   breakdown:[
+     {c:"Пункт чек-листа", e:"одна проверяемая идея в одной строке, без пошаговой детализации"},
+     {c:"Группировка по разделам", e:"чек-листы удобно делить по экранам/функциям продукта"}
+   ],
+   custom:"Создайте чек-лист под конкретный экран <b>вашего</b> приложения — отметьте UI-детали, валидации, обработку ошибок, которые стоит проверить при каждом релизе.",
+   tip:"Чек-листы хороши для частых быстрых проверок, тест-кейсы — для сложных сценариев, где важна точная воспроизводимость."},
+
+  {cmd:"Severity/Priority", name:"Серьёзность и приоритет", cat:"Документирование",
+   rows:[["Severity","Critical (падает всё приложение)"],["Priority","P1 (чинить немедленно)"]],
+   out:"Severity = техническое влияние, Priority = срочность исправления",
+   what:"Две независимые характеристики бага. Severity — насколько серьёзно он ломает систему технически. Priority — насколько срочно его нужно чинить с точки зрения бизнеса. Они не всегда совпадают.",
+   breakdown:[
+     {c:"Severity: Critical/High/Medium/Low", e:"критичность поломки (краш, потеря данных vs опечатка в тексте)"},
+     {c:"Priority: P1–P4", e:"очерёдность исправления, которую обычно выставляет менеджер/лид"}
+   ],
+   custom:"Пример несовпадения: опечатка в логотипе на главной (Severity: Low) может иметь Priority: P1, потому что её видят все пользователи сразу.",
+   tip:"Никогда не выставляйте Priority самостоятельно без согласования, если это не принято в вашей команде — это управленческое решение."},
+
+  {cmd:"Test Plan", name:"Тест-план", cat:"Стратегия",
+   rows:[["Scope","Модуль оплаты (release 2.4)"],["Вне scope","Push-уведомления (другая команда)"],["Сроки","3 рабочих дня"]],
+   out:"Документ согласован с командой перед стартом тестирования",
+   what:"Документ верхнего уровня: что именно будет тестироваться, какими методами, в какие сроки, кто ответственный и какие риски есть. Задаёт общую стратегию до того, как писать конкретные тест-кейсы.",
+   breakdown:[
+     {c:"Scope / Out of scope", e:"что проверяем и что явно НЕ проверяем в этом цикле"},
+     {c:"Подход (approach)", e:"какие техники и виды тестирования будут использованы"},
+     {c:"Критерии завершения", e:"когда тестирование считается законченным (например: 0 критичных багов)"}
+   ],
+   custom:"Для <b>вашего</b> проекта начните с малого: одна страница с разделами Scope / Сроки / Риски уже работает как мини тест-план для небольшой фичи.",
+   tip:"Тест-план не обязан быть длинным документом — для маленькой команды достаточно пары абзацев, лишь бы было явно зафиксировано, что именно проверяется."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+  const rowsHTML = t.rows.map(r=>`
+    <div class="row"><b>${r[0]}</b><span>${r[1].replace(/\n/g,'<br>')}</span></div>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">qa-example.md</div>
+      </div>
+      <div class="term-body">
+        ${rowsHTML}
+        <div class="out">${t.out}</div>
+      </div>
+    </div>
+
+    <div class="section-title">📋 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Что это</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Из чего состоит</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своём проекте</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

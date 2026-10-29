@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Chrome DevTools</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:20px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.3px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12.5px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .dt-tabs{
+    display:flex;gap:2px;flex-wrap:wrap;
+    padding:8px 8px 0;
+    border-bottom:1px solid var(--panel-border);
+  }
+  .dt-tab{
+    font-size:10.5px;color:var(--muted);
+    padding:5px 9px;border-radius:6px 6px 0 0;
+  }
+  .dt-tab.on{background:#060a10;color:var(--cyan);border:1px solid var(--panel-border);border-bottom:none;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:var(--purple);}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+  .jkey{color:#7fdbca;}
+  .err{color:#ff6b6b;}
+  .warnline{color:#f2c94c;}
+
+  table.dttbl{border-collapse:collapse;width:100%;font-size:11.5px;}
+  table.dttbl th{text-align:left;color:var(--cyan);border-bottom:1px solid var(--panel-border);padding:4px 8px 4px 0;}
+  table.dttbl td{color:var(--muted);padding:4px 8px 4px 0;border-bottom:1px solid #161c26;}
+  .status-ok{color:#2ecc71;}
+  .status-bad{color:#ff5f5f;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Chrome DevTools</span></h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Инструменты браузера для ручного и исследовательского тестирования</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Elements", name:"Инспектор DOM и CSS", cat:"Интерфейс", tab:"Elements",
+   body:`&lt;<span class="fn">button</span> <span class="jkey">class</span>=<span class="str">"btn btn-disabled"</span> <span class="jkey">disabled</span>&gt;
+  Купить
+&lt;/<span class="fn">button</span>&gt;
+
+<span class="com">/* styles */</span>
+.btn-disabled {
+  opacity: <span class="num">0.5</span>;
+  <span class="err">pointer-events: none;</span>
+}`,
+   what:"Показывает реальную структуру HTML-страницы и применённые CSS-стили в реальном времени. Можно кликнуть на любой элемент на странице и сразу увидеть его разметку и стили — а также временно изменить их прямо в браузере, не трогая код.",
+   breakdown:[
+     {c:"Инспектировать (иконка курсора)", e:"кликнуть на элемент страницы — DevTools сразу подсветит его в дереве DOM"},
+     {c:"Styles панель", e:"список CSS-правил, применённых к элементу, с указанием, откуда какое правило пришло"},
+     {c:"двойной клик по атрибуту/тексту", e:"временно отредактировать HTML или CSS прямо в браузере для проверки гипотезы"}
+   ],
+   custom:"Если на <b>вашем</b> сайте кнопка выглядит неактивной — откройте Elements, найдите её тег и проверьте атрибут disabled и CSS-свойства opacity/pointer-events, как в примере — это частая причина бага 'кнопка не нажимается'.",
+   tip:"Изменения в Elements не сохраняются и пропадают при перезагрузке страницы — это безопасный способ 'на лету' проверить гипотезу о причине визуального бага."},
+
+  {cmd:"Console", name:"Логи и ошибки JS", cat:"Диагностика", tab:"Console",
+   body:`<span class="err">Uncaught TypeError: Cannot read properties of undefined (reading 'name')</span>
+    at renderUser (app.js:142)
+
+<span class="warnline">⚠ Deprecated API used: document.write()</span>
+
+&gt; <span class="fn">document</span>.<span class="fn">title</span>
+<span class="str">"Checkout — MyShop"</span>`,
+   what:"Показывает ошибки и предупреждения JavaScript, возникающие на странице, а также позволяет выполнять произвольный JS прямо в контексте открытой страницы — полезно для быстрой диагностики и экспериментов.",
+   breakdown:[
+     {c:"красные строки", e:"непойманные ошибки JS — часто это и есть техническая причина 'не работает кнопка/форма'"},
+     {c:"жёлтые строки", e:"предупреждения — не ломают работу сразу, но сигнализируют о потенциальных проблемах"},
+     {c:"строка после &gt;", e:"команда, введённая вручную в консоли, и результат её выполнения"}
+   ],
+   custom:"Если в <b>вашем</b> приложении что-то 'тихо' не работает без видимой ошибки в UI — первым делом откройте Console: часто там уже есть явная красная ошибка, объясняющая причину.",
+   tip:"Прикладывайте скриншот Console к баг-репорту — для разработчика текст ошибки с номером строки часто сразу указывает на причину."},
+
+  {cmd:"Network", name:"Сетевые запросы", cat:"Диагностика", tab:"Network",
+   table:[
+     ["Name","Status","Time"],
+     ["login","<span class='status-ok'>200</span>","240ms"],
+     ["user/42","<span class='status-ok'>200</span>","80ms"],
+     ["checkout","<span class='status-bad'>500</span>","1200ms"]
+   ],
+   what:"Показывает все сетевые запросы, которые страница отправляет (API, картинки, скрипты), со статус-кодами, временем ответа и полным содержимым запроса/ответа. Ключевой инструмент, чтобы отличить баг фронтенда от бага backend.",
+   breakdown:[
+     {c:"Status", e:"HTTP-код ответа — 2xx успех, 4xx ошибка клиента, 5xx ошибка сервера"},
+     {c:"Time", e:"время от отправки запроса до получения ответа — помогает найти 'тормозящие' запросы"},
+     {c:"вкладки Headers / Payload / Response", e:"при клике на запрос — что именно отправили и что именно вернул сервер"}
+   ],
+   custom:"Если в <b>вашем</b> приложении форма 'не сохраняется' — откройте Network, повторите действие и посмотрите реальный статус-код и тело ответа соответствующего запроса, а не только то, что показывает UI.",
+   tip:"Включите галочку Preserve log, если проверяете запрос вокруг перехода на другую страницу — иначе Network очищается при каждой навигации."},
+
+  {cmd:"Application", name:"Cookies и хранилища", cat:"Диагностика", tab:"Application",
+   body:`<span class="com">Local Storage → http://app.test</span>
+auth_token    eyJhbGciOi...
+cart_items    [{"id":12,"qty":2}]
+
+<span class="com">Cookies</span>
+session_id    s%3A8f2c... | HttpOnly | Secure`,
+   what:"Показывает, что сайт хранит локально в браузере: cookies, localStorage, sessionStorage, IndexedDB. Нужен, чтобы проверить, сохраняются ли данные сессии/корзины/настроек там, где это ожидается по требованиям.",
+   breakdown:[
+     {c:"Local Storage", e:"данные, сохранённые сайтом и доступные до явной очистки — часто токены, настройки UI"},
+     {c:"Session Storage", e:"то же, но очищается при закрытии вкладки"},
+     {c:"Cookies", e:"с флагами HttpOnly (недоступна JS, безопаснее) и Secure (только по HTTPS)"}
+   ],
+   custom:"Проверьте, что <b>ваше</b> приложение действительно удаляет auth_token из Local Storage/Cookies после логаута — частый баг безопасности, когда 'выход' работает только в UI, а токен остаётся в хранилище.",
+   tip:"Кнопка 'Clear site data' в этой вкладке быстро имитирует 'первый визит' пользователя без ручной очистки кеша браузера."},
+
+  {cmd:"Sources", name:"Отладка JS (breakpoints)", cat:"Диагностика", tab:"Sources",
+   body:`<span class="com">app.js</span>
+140  function renderUser(user) {
+<span class="err">141▶ </span>  const name = user.profile.name;
+142    return name;
+143  }
+
+<span class="com">Scope → user = undefined</span>`,
+   what:"Позволяет поставить точку останова (breakpoint) на конкретной строке JS-кода — выполнение скрипта остановится именно там, и можно будет посмотреть реальные значения переменных в этот момент, пошагово выполняя код дальше.",
+   breakdown:[
+     {c:"breakpoint (клик по номеру строки)", e:"выполнение кода останавливается перед этой строкой при следующем её выполнении"},
+     {c:"Scope панель", e:"показывает значения всех переменных, доступных в точке останова"},
+     {c:"Step over / Step into", e:"выполнить код построчно дальше, 'заходя' внутрь вызываемых функций или нет"}
+   ],
+   custom:"Если баг в <b>вашем</b> приложении воспроизводится нестабильно — поставьте breakpoint в подозрительном месте кода (его может подсказать разработчик) и посмотрите, какие данные приходят в проблемный момент.",
+   tip:"Это уже немного заходит на территорию разработчика, но для тестировщика полезно как способ подготовить точный репорт: 'переменная user приходит undefined в этот момент' — такой баг чинится быстрее."},
+
+  {cmd:"Device Toolbar", name:"Эмуляция мобильных устройств", cat:"Адаптивность", tab:"Elements",
+   body:`<span class="com">Device: iPhone 12 Pro</span>
+390 × 844 · DPR: 3
+Throttling: Mid-tier mobile`,
+   what:"Переключает отображение страницы на размеры разных устройств (телефоны, планшеты) прямо в десктопном браузере, без необходимости в реальном устройстве — быстрая первая проверка адаптивной вёрстки.",
+   breakdown:[
+     {c:"иконка телефон+планшет", e:"включает режим эмуляции устройства (или Ctrl/Cmd+Shift+M)"},
+     {c:"Dimensions", e:"выбор конкретной модели устройства или произвольного разрешения"},
+     {c:"DPR (Device Pixel Ratio)", e:"плотность пикселей экрана — влияет на чёткость изображений"}
+   ],
+   custom:"Проверяйте <b>ваше</b> приложение минимум на 2-3 характерных разрешениях: маленький телефон (375px), планшет (768px), десктоп — это ловит большинство адаптивных багов без доступа к реальным устройствам.",
+   tip:"Это эмуляция вёрстки, а не реального устройства — финальную проверку критичных сценариев всё равно стоит делать на настоящем телефоне, особенно для жестов и производительности."},
+
+  {cmd:"Network Throttling", name:"Эмуляция медленной сети", cat:"Производительность", tab:"Network",
+   body:`<span class="com">Throttling: Slow 3G</span>
+Download: 400 Kb/s
+Upload: 400 Kb/s
+Latency: 2000ms
+
+login — 4.2s (вместо 240ms на обычной сети)`,
+   what:"Искусственно замедляет сетевые запросы страницы, эмулируя плохое соединение (3G, медленный Wi-Fi) или полное отсутствие сети — проверка, как приложение ведёт себя не в идеальных условиях.",
+   breakdown:[
+     {c:"Slow 3G / Fast 3G", e:"готовые пресеты с реалистичными значениями скорости и задержки"},
+     {c:"Offline", e:"полностью имитирует отсутствие интернет-соединения"},
+     {c:"Custom profile", e:"можно задать свои значения скорости/задержки под конкретный тест-кейс"}
+   ],
+   custom:"Проверьте на <b>вашем</b> приложении: показывается ли индикатор загрузки на медленной сети, что происходит при обрыве соединения посреди отправки формы — такие сценарии редко тестируют 'в быстром офисном Wi-Fi'.",
+   tip:"Комбинируйте с Device Toolbar: многие мобильные пользователи реально сталкиваются именно с медленной сетью, а не только с маленьким экраном."},
+
+  {cmd:"Copy as cURL", name:"Экспорт запроса", cat:"Диагностика", tab:"Network",
+   body:`<span class="com">ПКМ по запросу → Copy → Copy as cURL</span>
+
+curl <span class="str">'https://api.app.test/checkout'</span> \\
+  -H <span class="str">'authorization: Bearer eyJhbGciOi...'</span> \\
+  -H <span class="str">'content-type: application/json'</span> \\
+  --data-raw <span class="str">'{"items":[12]}'</span>`,
+   what:"Превращает любой увиденный в Network запрос в готовую команду curl (или код для Python/JS/Node) — можно воспроизвести этот же запрос вне браузера: в терминале, Postman, баг-репорте.",
+   breakdown:[
+     {c:"ПКМ по запросу → Copy", e:"контекстное меню с вариантами экспорта: cURL (bash), cURL (cmd), как fetch()"},
+     {c:"включённые заголовки/cookies", e:"экспортированная команда содержит реальный токен/сессию — осторожно при публикации"}
+   ],
+   custom:"Нашли баг конкретного API-запроса в <b>вашем</b> приложении через Network — скопируйте его как cURL и вставьте прямо в баг-репорт: разработчик сможет воспроизвести его одной командой, без пересказа шагов 'своими словами'.",
+   warn:"Экспортированная команда содержит реальный токен авторизации — не вставляйте её в публичные/расшаренные тикеты без удаления чувствительных данных."},
+
+  {cmd:"Lighthouse", name:"Аудит производительности", cat:"Производительность", tab:"Lighthouse",
+   body:`Performance    <span class="status-ok">82</span>
+Accessibility  <span class="status-bad">64</span>
+Best Practices <span class="status-ok">93</span>
+SEO            <span class="status-ok">90</span>
+
+⚠ Buttons do not have accessible names
+⚠ Image elements do not have [alt] attributes`,
+   what:"Автоматический аудит страницы по нескольким категориям: производительность, доступность (accessibility), лучшие практики, SEO. Выдаёт оценку 0–100 и конкретный список проблем с объяснением.",
+   breakdown:[
+     {c:"Performance", e:"скорость загрузки и отрисовки страницы (время до интерактивности и т.п.)"},
+     {c:"Accessibility", e:"насколько страница доступна людям с ограниченными возможностями (контраст, alt-тексты, ARIA)"},
+     {c:"Generate report", e:"запустить аудит; лучше делать в режиме инкогнито без лишних расширений, искажающих результат"}
+   ],
+   custom:"Прогоните Lighthouse на ключевых страницах <b>вашего</b> сайта (главная, карточка товара, checkout) и заведите найденные проблемы accessibility как отдельные баги — это редко проверяется вручную, но важно для реальных пользователей.",
+   tip:"Результаты Lighthouse могут отличаться между запусками (зависят от текущей нагрузки на машину) — для надёжных цифр производительности лучше делать несколько прогонов."},
+
+  {cmd:"Preserve log & Disable cache", name:"Стабильность отладки", cat:"Диагностика", tab:"Network",
+   body:`☑ Preserve log
+☑ Disable cache (while DevTools is open)
+
+<span class="com">// без этих галочек:</span>
+переход на страницу → Network очищается
+старая версия JS из кеша → баг "не воспроизводится"`,
+   what:"Два чекбокса в Network, которые сильно экономят время при отладке: Preserve log не даёт очистить список запросов при переходе на другую страницу, Disable cache заставляет браузер всегда грузить свежие файлы, а не старые закешированные версии.",
+   breakdown:[
+     {c:"Preserve log", e:"сохраняет историю запросов через редиректы/переходы — иначе видно только запросы после последней навигации"},
+     {c:"Disable cache", e:"работает, только пока открыт DevTools — полезно, когда правки JS/CSS 'не применяются' визуально"}
+   ],
+   custom:"Включайте оба чекбокса по умолчанию, когда тестируете сценарий с переходом между страницами (логин → редирект на главную) или когда разработчик только что выкатил фикс, а баг 'всё ещё воспроизводится' — возможно, это просто старый кеш.",
+   tip:"Если баг не воспроизводится, а коллега говорит 'у меня всё работает' — первое, что стоит проверить, это не отличается ли у вас состояние кеша/хранилища, а не код."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+const allTabs = ["Elements","Console","Network","Application","Sources","Lighthouse"];
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  const tabsHTML = allTabs.map(tb=>`<div class="dt-tab ${tb===t.tab?'on':''}">${tb}</div>`).join('');
+
+  let bodyBlock;
+  if(t.table){
+    const head = `<tr>${t.table[0].map(c=>`<th>${c}</th>`).join('')}</tr>`;
+    const rows = t.table.slice(1).map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('');
+    bodyBlock = `<table class="dttbl"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+  } else {
+    bodyBlock = `<pre>${t.body}</pre>`;
+  }
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="dt-tabs">${tabsHTML}</div>
+      <div class="term-body">${bodyBlock}</div>
+    </div>
+
+    <div class="section-title">🛠 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Для чего нужно</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

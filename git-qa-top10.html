@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Git для тестировщиков</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:21px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.3px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 190px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:13px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  .prompt{color:var(--green);}
+  .cmdline{color:var(--text);}
+  .out{color:var(--muted);margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.5;}
+  .add{color:#2ecc71;}
+  .del{color:#ff5f5f;}
+  .branch{color:#82aaff;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Git</span> для тестировщиков</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Git-команды для работы с автотестами и поиска регрессий</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"git clone", name:"Скачать репозиторий", cat:"Начало работы",
+   line:"git clone https://github.com/team/qa-automation.git",
+   out:"Cloning into 'qa-automation'...\nremote: Counting objects: 1204\nReceiving objects: 100%",
+   what:"Скачивает полную копию репозитория (код + вся история изменений) на вашу машину. Это первый шаг, чтобы получить проект с автотестами и начать с ним работать.",
+   breakdown:[
+     {c:"https://.../qa-automation.git", e:"адрес репозитория — берётся на GitHub/GitLab с кнопки 'Clone'"}
+   ],
+   custom:"Замените URL на адрес реального репозитория <b>вашего</b> проекта с автотестами — его даёт тимлид или DevOps при онбординге.",
+   tip:"Для приватных репозиториев потребуется настроить SSH-ключ или токен доступа — без них git clone завершится ошибкой авторизации."},
+
+  {cmd:"git status", name:"Что изменилось", cat:"Основы",
+   line:"git status",
+   out:"On branch feature/login-tests\nChanges not staged for commit:\n  modified:   tests/login.spec.ts\nUntracked files:\n  tests/signup.spec.ts",
+   what:"Показывает текущее состояние рабочей папки: какие файлы изменены, какие новые (ещё не отслеживаются Git), какие уже готовы к коммиту. Самая часто используемая команда — выполняйте её перед любым следующим шагом.",
+   breakdown:[
+     {c:"modified", e:"файл уже отслеживается Git и был изменён с последнего коммита"},
+     {c:"Untracked files", e:"новый файл, про который Git ещё ничего не знает"},
+     {c:"branch feature/login-tests", e:"название ветки, в которой вы сейчас находитесь"}
+   ],
+   custom:"Запускайте git status в <b>вашем</b> репозитории перед git add/commit — так вы точно увидите, что именно собираетесь закоммитить, и не отправите случайно лишний файл.",
+   tip:"git status можно вызывать сколько угодно раз — она ничего не меняет в репозитории, только показывает текущее состояние."},
+
+  {cmd:"git pull / fetch", name:"Получить изменения", cat:"Синхронизация",
+   line:"git pull origin main",
+   out:"Updating 8f2c1a0..1d44bb2\nFast-forward\n tests/checkout.spec.ts | 14 +++++++++-----",
+   what:"Скачивает последние изменения из удалённого репозитория и применяет их к вашей локальной ветке. Нужно делать регулярно, чтобы ваши тесты не 'отставали' от актуального кода коллег.",
+   breakdown:[
+     {c:"git fetch", e:"только скачивает изменения, не применяя их к рабочей папке — безопасно посмотреть, что нового"},
+     {c:"git pull", e:"по сути fetch + merge — сразу применяет скачанные изменения к текущей ветке"},
+     {c:"origin main", e:"откуда тянуть (origin — имя удалённого репозитория) и из какой ветки"}
+   ],
+   custom:"Выполняйте git pull в <b>вашем</b> репозитории каждое утро перед началом работы и перед запуском регрессионного набора — так вы тестируете актуальный код, а не вчерашнюю версию.",
+   tip:"Если pull ругается на конфликты — сначала сохраните свои незакоммиченные изменения через git stash (см. ниже), потом повторите pull."},
+
+  {cmd:"git branch / checkout", name:"Переключение веток", cat:"Основы",
+   line:"git checkout -b bugfix/cart-total",
+   out:"Switched to a new branch 'bugfix/cart-total'",
+   what:"Ветки — это параллельные 'версии' кода. Переключение между ними позволяет, например, сравнить поведение бага на старой и новой версии фичи, или создать отдельную ветку для своих тестовых скриптов.",
+   breakdown:[
+     {c:"git branch", e:"показать список всех локальных веток, текущая отмечена звёздочкой"},
+     {c:"git checkout &lt;ветка&gt;", e:"переключиться на уже существующую ветку"},
+     {c:"git checkout -b &lt;имя&gt;", e:"создать новую ветку и сразу переключиться на неё"}
+   ],
+   custom:"Перед написанием новых автотестов для фичи <b>вашего</b> проекта создайте отдельную ветку (bugfix/... или test/...) — так ваши изменения не смешаются с чужими до code review.",
+   tip:"git switch — более новая и понятная команда специально для переключения веток, появилась как альтернатива многозначному checkout."},
+
+  {cmd:"git log", name:"История коммитов", cat:"Диагностика",
+   line:"git log --oneline -5",
+   out:"1d44bb2 fix: cart total rounding\n8f2c1a0 feat: add promo code field\na93e7c1 test: checkout flow e2e\n5b0f2aa fix: null pointer on empty cart",
+   what:"Показывает историю коммитов — кто, когда и что менял. Незаменим, когда нужно понять, в каком именно изменении появился баг, или найти контекст перед тем, как заводить баг-репорт.",
+   breakdown:[
+     {c:"--oneline", e:"компактный вывод — один коммит на строку вместо подробного блока"},
+     {c:"-5", e:"показать только последние 5 коммитов"},
+     {c:"git log -- файл", e:"история изменений только по конкретному файлу"}
+   ],
+   custom:"Если баг в <b>вашем</b> приложении появился 'недавно', посмотрите git log по затронутому файлу/модулю за последние дни — часто там сразу видно подозрительный коммит перед багом.",
+   tip:"git log --author=\"имя\" — отфильтровать историю по конкретному автору, если знаете, кто вероятно вносил изменение."},
+
+  {cmd:"git diff", name:"Что именно изменилось", cat:"Диагностика",
+   line:"git diff HEAD~1 HEAD -- src/cart.ts",
+   out:"- const total = price * qty;\n+ const total = Math.round(price * qty * 100) / 100;",
+   what:"Построчно показывает разницу между двумя состояниями кода (например текущими изменениями и последним коммитом, или двумя разными коммитами). Помогает понять, что именно поменялось в логике.",
+   breakdown:[
+     {c:"- строка", e:"была удалена (старый вариант кода)"},
+     {c:"+ строка", e:"была добавлена (новый вариант кода)"},
+     {c:"HEAD~1 HEAD", e:"сравнить предыдущий коммит с текущим"},
+     {c:"-- src/cart.ts", e:"ограничить сравнение только одним файлом"}
+   ],
+   custom:"Когда разработчик говорит 'я поправил округление суммы' в <b>вашем</b> проекте — посмотрите git diff по этому коммиту, чтобы понять точную логику изменения и придумать точные граничные тест-кейсы под него.",
+   tip:"git diff без аргументов показывает ваши собственные незакоммиченные изменения — удобно для финальной проверки перед коммитом."},
+
+  {cmd:"git add / commit", name:"Сохранение изменений", cat:"Основы",
+   line:"git add tests/checkout.spec.ts\ngit commit -m \"test: add coupon validation cases\"",
+   out:"[bugfix/cart-total 3a7f901] test: add coupon validation cases\n 1 file changed, 24 insertions(+)",
+   what:"add помечает файл как готовый к сохранению ('staged'), commit — фиксирует изменения в истории репозитория с пояснительным сообщением. Так ваши новые тест-кейсы попадают в общую историю проекта.",
+   breakdown:[
+     {c:"git add &lt;файл&gt;", e:"добавить конкретный файл в индекс перед коммитом (или git add . — все изменённые файлы)"},
+     {c:"git commit -m \"...\"", e:"зафиксировать изменения с сообщением, объясняющим ЧТО и иногда ЗАЧЕМ"}
+   ],
+   custom:"Пишите сообщение коммита так, чтобы коллега через месяц понял суть без открытия diff — например 'test: add coupon validation cases' понятнее, чем просто 'fix'.",
+   tip:"Коммитьте небольшими логическими порциями (один набор тест-кейсов = один коммит) — так проще откатить именно проблемную часть, если что-то пошло не так."},
+
+  {cmd:"git stash", name:"Временно отложить изменения", cat:"Повседневное",
+   line:"git stash\ngit pull origin main\ngit stash pop",
+   out:"Saved working directory and index state WIP on bugfix/cart-total\n...\nDropped stash@{0}",
+   what:"Временно 'прячет' ваши незакоммиченные изменения, возвращая рабочую папку к чистому состоянию последнего коммита — не теряя их. Удобно, когда нужно быстро переключиться на другую задачу или подтянуть изменения без конфликтов.",
+   breakdown:[
+     {c:"git stash", e:"сохранить текущие незакоммиченные изменения в 'тайник' и очистить рабочую папку"},
+     {c:"git stash pop", e:"вернуть последние отложенные изменения обратно"},
+     {c:"git stash list", e:"посмотреть все отложенные наборы изменений, если их несколько"}
+   ],
+   custom:"Используйте stash в <b>вашем</b> репозитории, когда пишете тест, но срочно нужно переключиться на другую ветку проверить баг — не обязательно коммитить недописанный код, чтобы не потерять его.",
+   tip:"git stash — это именно 'временно', не используйте как постоянное хранилище незавершённой работы: легко забыть, что там лежит."},
+
+  {cmd:"git bisect", name:"Найти коммит, сломавший тест", cat:"Поиск регрессий",
+   line:"git bisect start\ngit bisect bad HEAD\ngit bisect good v2.3.0",
+   out:"Bisecting: 6 revisions left to test after this (roughly 3 steps)\n[a93e7c1] feat: redesign checkout summary",
+   what:"Автоматизированный бинарный поиск 'плохого' коммита: вы говорите Git, где точно всё было хорошо (good) и где точно уже сломано (bad), и он последовательно предлагает коммиты посередине для проверки, пока не найдёт первый сломавший всё коммит.",
+   breakdown:[
+     {c:"git bisect start", e:"начать сессию поиска"},
+     {c:"git bisect bad HEAD", e:"пометить текущее состояние как содержащее баг"},
+     {c:"git bisect good v2.3.0", e:"пометить известную рабочую версию/тег как заведомо без бага"},
+     {c:"git bisect good / bad (на каждом шаге)", e:"после проверки предложенного коммита — сказать Git, воспроизводится баг там или нет"}
+   ],
+   custom:"Если регрессионный тест в <b>вашем</b> проекте вдруг начал падать, а когда именно это случилось — неясно, используйте bisect между последней точно рабочей версией (тег релиза) и текущим HEAD — вместо ручного перебора десятков коммитов.",
+   tip:"git bisect run ./run_test.sh может автоматически гонять ваш тестовый скрипт на каждом шаге и самостоятельно находить виновный коммит без ручного участия."},
+
+  {cmd:"git blame", name:"Кто и когда менял строку", cat:"Диагностика",
+   line:"git blame -L 40,45 src/checkout.ts",
+   out:"a93e7c1 (Ivan Petrov  2026-10-20) 42)  const total = calcTotal(items, coupon);",
+   what:"Показывает, в каком коммите, кем и когда была в последний раз изменена каждая конкретная строка файла. Полезно, чтобы быстро найти автора изменения и контекст (сообщение коммита), когда нужно уточнить логику перед заведением бага.",
+   breakdown:[
+     {c:"-L 40,45", e:"ограничить вывод диапазоном строк 40–45, а не весь файл целиком"},
+     {c:"src/checkout.ts", e:"файл, по которому смотрим построчную историю"}
+   ],
+   custom:"Нашли подозрительную строку в коде <b>вашего</b> проекта во время code review тест-кейсов или дебага — git blame по этой строке покажет, у кого спросить про логику или контекст изменения.",
+   tip:"Используйте вместе с -w, чтобы git blame игнорировал изменения только в пробелах/отступах и не 'терял' реального автора логики."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  const lines = t.line.split('\n').map(l=>`<div><span class="prompt">~$</span> <span class="cmdline">${l}</span></div>`).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">user@qa: ~/qa-automation (<span class="branch">feature/login-tests</span>)</div>
+      </div>
+      <div class="term-body">
+        ${lines}
+        <div class="out">${t.out}</div>
+      </div>
+    </div>
+
+    <div class="section-title">🔀 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Для чего нужно</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор команды</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Git для автоматизации тестирования</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:19px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.2px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12.5px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  .prompt{color:var(--green);}
+  .cmdline{color:var(--text);}
+  .out{color:var(--muted);margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.5;}
+  .branch{color:#82aaff;}
+  .com{color:#5c6773;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Git</span> для автоматизации тестирования</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Git для фреймворков автотестов, CI/CD и совместной работы над кодом тестов</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:".gitignore", name:"Исключить лишние файлы", cat:"Конфигурация",
+   line:"cat .gitignore",
+   out:"node_modules/\ntest-results/\nplaywright-report/\n*.log\n.env",
+   what:"Файл со списком путей, которые Git должен игнорировать и никогда не предлагать закоммитить. Для фреймворка автотестов критично исключить сгенерированные артефакты (отчёты, скриншоты, зависимости) — иначе репозиторий быстро раздувается мусором.",
+   breakdown:[
+     {c:"node_modules/", e:"установленные npm-зависимости — пересоздаются командой npm install, хранить в git не нужно"},
+     {c:"test-results/, playwright-report/", e:"сгенерированные отчёты прогона тестов — каждый запуск создаёт новые"},
+     {c:"*.log", e:"маска по расширению — игнорировать все лог-файлы"},
+     {c:".env", e:"файл с секретами/токенами — никогда не должен попадать в репозиторий"}
+   ],
+   custom:"Создайте .gitignore в корне <b>вашего</b> репозитория с автотестами и добавьте туда папки отчётов и скриншотов вашего фреймворка (test-results, allure-results, cypress/videos и т.п.) — под конкретный инструмент список будет своим.",
+   tip:"Если файл уже был закоммичен ДО добавления в .gitignore, правило на него не подействует — нужно сначала выполнить git rm --cached <файл>."},
+
+  {cmd:"git tag", name:"Пометить версию набора тестов", cat:"Версионирование",
+   line:"git tag -a v1.4.0 -m \"stable regression suite before release 3.2\"\ngit push origin v1.4.0",
+   out:"Tag v1.4.0 created\nTo github.com/team/qa-automation.git\n * [new tag]  v1.4.0 -> v1.4.0",
+   what:"Тег — именованная метка на конкретном коммите, обычно обозначающая стабильную версию. Для фреймворка автотестов удобно помечать тегом состояние, которое гарантированно 'зелёное' перед релизом — чтобы всегда можно было вернуться к нему.",
+   breakdown:[
+     {c:"-a v1.4.0", e:"создать аннотированный тег (с автором, датой, сообщением) — предпочтительнее простого тега"},
+     {c:"-m \"...\"", e:"сообщение, поясняющее, что это за версия"},
+     {c:"git push origin v1.4.0", e:"теги по умолчанию НЕ отправляются обычным push — нужно пушить явно"}
+   ],
+   custom:"Ставьте тег на коммит <b>вашего</b> репозитория автотестов сразу после того, как весь регрессионный набор прошёл перед релизом — это надёжная точка отката, если следующие изменения что-то сломают.",
+   tip:"git checkout v1.4.0 — временно переключиться на состояние кода в момент этого тега, не создавая новую ветку."},
+
+  {cmd:"git rebase -i", name:"Причесать историю коммитов", cat:"История",
+   line:"git rebase -i HEAD~4",
+   out:"pick a1b2c3d test: add login cases\nsquash e4f5g6h fix typo\nsquash h7i8j9k fix typo again\npick k0l1m2n test: add logout cases",
+   what:"Интерактивный rebase позволяет переписать последние N коммитов перед тем, как отправить их на ревью: объединить мелкие 'fix typo' коммиты в один, изменить сообщения, поменять порядок. Результат — чистая, понятная история вместо хаотичных мелких правок.",
+   breakdown:[
+     {c:"HEAD~4", e:"взять для редактирования последние 4 коммита"},
+     {c:"pick", e:"оставить коммит как есть"},
+     {c:"squash", e:"объединить этот коммит с предыдущим pick в один"},
+     {c:"reword", e:"оставить коммит, но дать возможность изменить его сообщение"}
+   ],
+   custom:"Перед тем как открыть Pull Request с новыми тестами в <b>вашем</b> проекте, объедините технические промежуточные коммиты ('wip', 'fix typo') в один осмысленный — ревьюеру будет проще понять изменение.",
+   warn:"Никогда не делайте rebase уже запушенных коммитов, которые видели/тянули другие люди — это переписывает историю и ломает их локальные копии."},
+
+  {cmd:"git cherry-pick", name:"Перенести один коммит", cat:"История",
+   line:"git cherry-pick a93e7c1",
+   out:"[hotfix/release-3.2 f0a1b2c] fix: checkout null pointer\n 1 file changed, 3 insertions(+)",
+   what:"Применяет один конкретный коммит из другой ветки к текущей — без слияния всей ветки целиком. Полезно, когда нужный фикс теста или фикстуры уже есть в одной ветке, но нужен именно он, а не все остальные незавершённые изменения из неё.",
+   breakdown:[
+     {c:"a93e7c1", e:"хэш коммита, который нужно перенести (берётся из git log)"}
+   ],
+   custom:"Если в <b>вашем</b> репозитории важный фикс тестовой фикстуры попал в ветку с ещё незавершённой фичей, а нужен срочно в hotfix-ветке — cherry-pick перенесёт именно этот коммит, не затрагивая остальное.",
+   tip:"Если на исходной ветке после этого коммита есть ещё изменения — cherry-pick возьмёт только указанный, не более того."},
+
+  {cmd:"Git hooks", name:"Автоматические проверки перед коммитом", cat:"Автоматизация",
+   line:"cat .git/hooks/pre-commit",
+   out:"#!/bin/sh\nnpx eslint . || exit 1\nnpx tsc --noEmit || exit 1",
+   what:"Hook — скрипт, который Git запускает автоматически на определённом событии (перед коммитом, перед push и т.д.). pre-commit хук может прогонять линтер или проверку типов и блокировать коммит, если они не прошли — ошибки ловятся до того, как попадут в репозиторий.",
+   breakdown:[
+     {c:"pre-commit", e:"срабатывает перед созданием коммита; ненулевой код выхода скрипта отменяет коммит"},
+     {c:"exit 1", e:"явный код ошибки — именно он останавливает коммит при неудаче проверки"},
+     {c:"pre-push", e:"аналогичный хук, но срабатывает перед отправкой на удалённый репозиторий — туда часто выносят запуск самих тестов"}
+   ],
+   custom:"Для <b>вашего</b> фреймворка автотестов настройте pre-commit хук (вручную или через пакет вроде Husky) так, чтобы он прогонял линтер и проверку типов на изменённых файлах — ловит опечатки в тестах до code review.",
+   tip:"Инструмент Husky — самый популярный способ управлять git hooks в JS/TS проектах без ручного редактирования .git/hooks."},
+
+  {cmd:"git worktree", name:"Несколько веток одновременно", cat:"Продвинутое",
+   line:"git worktree add ../qa-automation-release release/3.2",
+   out:"Preparing worktree (checking out 'release/3.2')\nHEAD is now at 8f2c1a0 release 3.2 freeze",
+   what:"Позволяет иметь отдельную рабочую папку для другой ветки того же репозитория, без повторного клонирования — например, чтобы одновременно гонять регрессию на ветке релиза и писать новые тесты в main, не переключаясь туда-сюда.",
+   breakdown:[
+     {c:"worktree add", e:"создать новую рабочую папку, привязанную к существующему репозиторию"},
+     {c:"../qa-automation-release", e:"путь, куда создать эту дополнительную рабочую копию"},
+     {c:"release/3.2", e:"ветка, которая будет выгружена в эту папку"}
+   ],
+   custom:"Если вам в <b>вашем</b> проекте нужно параллельно гонять автотесты на двух разных ветках (например текущий релиз и следующий) — worktree избавит от постоянного git checkout и переустановки зависимостей при каждом переключении.",
+   tip:"git worktree list покажет все созданные дополнительные рабочие папки; git worktree remove <путь> — удалить ненужную."},
+
+  {cmd:"git submodule", name:"Общий фреймворк в разных проектах", cat:"Продвинутое",
+   line:"git submodule add https://github.com/team/shared-test-utils.git libs/shared-utils\ngit submodule update --init --recursive",
+   out:"Cloning into 'libs/shared-utils'...\nSubmodule path 'libs/shared-utils': checked out '3fae2c1'",
+   what:"Подключает один git-репозиторий внутрь другого как отдельную подпапку со своей независимой историей — удобно, когда общие вспомогательные утилиты для автотестов (например кастомные матчеры или фикстуры) используются сразу в нескольких проектах.",
+   breakdown:[
+     {c:"git submodule add &lt;url&gt; &lt;путь&gt;", e:"подключить внешний репозиторий как подмодуль в указанную папку"},
+     {c:"submodule update --init --recursive", e:"команда, которую нужно выполнить после клонирования основного репозитория, чтобы скачать содержимое подмодулей"}
+   ],
+   custom:"Если у <b>вашей</b> команды есть общая библиотека тестовых утилит, переиспользуемая в нескольких репозиториях автотестов — вынесите её в отдельный репозиторий и подключите подмодулем вместо копирования кода вручную.",
+   warn:"Подмодули требуют отдельных команд (update --init --recursive) после обычного clone — новые члены команды часто забывают об этом шаге, что стоит явно описать в README."},
+
+  {cmd:"merge vs rebase", name:"Стратегии слияния веток", cat:"История",
+   line:"git merge feature/new-tests\n# или:\ngit rebase main",
+   out:"merge: создаёт merge-коммит, история ветвится\nrebase: переносит коммиты поверх main, история линейная",
+   what:"Два разных способа объединить изменения из одной ветки в другую. merge сохраняет реальную историю ветвления (с 'развилками'), rebase переписывает коммиты так, будто они были сделаны поверх актуального main — история остаётся линейной, но при этом меняются хэши коммитов.",
+   breakdown:[
+     {c:"git merge &lt;ветка&gt;", e:"слить указанную ветку в текущую, создав merge-коммит (если были расхождения)"},
+     {c:"git rebase &lt;ветка&gt;", e:"перенести коммиты текущей ветки поверх указанной — история становится прямой линией"}
+   ],
+   custom:"В <b>вашем</b> проекте для личных веток с автотестами (ещё не открытых как Pull Request) безопасно использовать rebase для чистоты истории; после того как ветку увидели другие — переключайтесь на merge, чтобы не переписывать общую историю.",
+   tip:"Единого 'правильного' варианта нет — важно, чтобы вся команда придерживалась одной договорённости, иначе история репозитория станет непредсказуемой."},
+
+  {cmd:"git remote", name:"Fork + upstream", cat:"Совместная работа",
+   line:"git remote add upstream https://github.com/original-team/qa-automation.git\ngit fetch upstream\ngit merge upstream/main",
+   out:"From github.com/original-team/qa-automation\n * [new branch]  main -> upstream/main",
+   what:"Когда вы работаете с форком (своей копией) общего репозитория, upstream — это ссылка на оригинальный репозиторий. Так можно подтягивать изменения из оригинала в свой форк, не теряя связи с 'первоисточником'.",
+   breakdown:[
+     {c:"git remote add upstream &lt;url&gt;", e:"добавить второй удалённый репозиторий с именем upstream (origin при этом остаётся вашим форком)"},
+     {c:"git fetch upstream", e:"скачать изменения из оригинального репозитория"},
+     {c:"git remote -v", e:"посмотреть список всех настроенных удалённых репозиториев и их адреса"}
+   ],
+   custom:"Если вы вносите вклад в общий opensource-фреймворк автотестов <b>вашей</b> компании через форк — настройте upstream один раз при старте работы, дальше регулярно подтягивайте из него актуальные изменения.",
+   tip:"origin — это 'ваш' удалённый репозиторий (форк, куда вы пушите), upstream — исходный, откуда вы только подтягиваете изменения."},
+
+  {cmd:"Conventional Commits", name:"Формат сообщений для CI", cat:"CI/CD",
+   line:"git commit -m \"test(checkout): add coupon edge cases\"\ngit commit -m \"fix(ci): retry flaky network test\"",
+   out:"semantic-release: parsing commit → type=fix → bump patch version",
+   what:"Строгий формат сообщения коммита (тип: описание), который может автоматически парситься CI-инструментами — например semantic-release использует его, чтобы понять, нужно ли поднимать версию пакета с тестовыми утилитами и генерировать changelog автоматически.",
+   breakdown:[
+     {c:"test(checkout): ...", e:"тип test — добавлены/изменены тесты, в скобках — область изменения"},
+     {c:"fix(ci): ...", e:"тип fix — исправление бага, по конвенции повышает PATCH-версию при автоматическом релизе"},
+     {c:"feat(...): ...", e:"тип feat — новая возможность, повышает MINOR-версию"}
+   ],
+   custom:"Если <b>ваш</b> репозиторий с переиспользуемыми тестовыми утилитами публикуется как npm-пакет — настройте semantic-release и договоритесь с командой об едином формате сообщений коммитов, чтобы версии и changelog генерировались без ручной работы.",
+   tip:"Даже без автоматизации версионирования, единый формат сообщений сильно упрощает чтение истории: сразу видно тип изменения, не открывая diff."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  const lines = t.line.split('\n').map(l=>{
+    if(l.startsWith('#')) return `<div class="com">${l}</div>`;
+    return `<div><span class="prompt">~$</span> <span class="cmdline">${l}</span></div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">user@qa: ~/qa-automation (<span class="branch">main</span>)</div>
+      </div>
+      <div class="term-body">
+        ${lines}
+        <div class="out">${t.out}</div>
+      </div>
+    </div>
+
+    <div class="section-title">⚙️ ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Для чего нужно</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своём проекте</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

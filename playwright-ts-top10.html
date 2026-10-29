@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Playwright + TS</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:22px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.3px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 210px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12.5px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12px;overflow-x:auto;}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:#c792ea;}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .com{color:#5c6773;}
+  .plain{color:var(--text);}
+  .out{color:var(--muted);margin-top:8px;font-size:11.5px;white-space:pre-wrap;line-height:1.5;border-top:1px solid var(--panel-border);padding-top:8px;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Playwright</span> + TS</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Автоматизация тестирования · Playwright + TypeScript · для начинающих</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Locators", name:"Поиск элементов", cat:"Основы",
+   code:`<span class="kw">await</span> <span class="fn">page</span>.<span class="fn">getByRole</span>(<span class="str">'button'</span>, { name: <span class="str">'Войти'</span> }).<span class="fn">click</span>();
+<span class="kw">await</span> <span class="fn">page</span>.<span class="fn">getByTestId</span>(<span class="str">'login-input'</span>).<span class="fn">fill</span>(<span class="str">'user@mail.com'</span>);`,
+   out:"✓ элемент найден и клик выполнен",
+   what:"Locator — это 'ленивый' указатель на элемент страницы: он не ищет элемент сразу, а ищет его в момент действия (клик, ввод), автоматически дожидаясь, пока элемент появится и станет доступен.",
+   breakdown:[
+     {c:"getByRole", e:"искать по ARIA-роли и видимому тексту — самый устойчивый способ, рекомендован Playwright"},
+     {c:"getByTestId", e:"искать по атрибуту data-testid — удобно, когда вёрстка часто меняется"},
+     {c:"getByText / getByLabel", e:"другие варианты: по тексту на странице или по подписи поля формы"}
+   ],
+   custom:"Замените <b>'Войти'</b> и <b>'login-input'</b> на реальный текст кнопок и <code>data-testid</code> <b>вашего</b> приложения. Если тестируемый фронтенд не расставляет data-testid — договоритесь с разработчиками добавить их, это сильно упростит тесты.",
+   tip:"Избегайте CSS/XPath-селекторов вида div > span:nth-child(2) — они ломаются при любой правке вёрстки."},
+
+  {cmd:"Assertions", name:"Проверки (expect)", cat:"Основы",
+   code:`<span class="kw">await</span> <span class="fn">expect</span>(<span class="fn">page</span>.<span class="fn">getByTestId</span>(<span class="str">'cart-count'</span>))
+  .<span class="fn">toHaveText</span>(<span class="str">'3'</span>);
+<span class="kw">await</span> <span class="fn">expect</span>(<span class="fn">page</span>).<span class="fn">toHaveURL</span>(<span class="str">/\\/checkout/</span>);`,
+   out:"✓ 2 passed",
+   what:"expect — встроенный механизм проверок Playwright. В отличие от обычного assert, web-проверки (toHaveText, toBeVisible и т.д.) автоматически повторяются ('retry'), пока не истечёт таймаут — это снимает большинство 'гонок' с асинхронной отрисовкой UI.",
+   breakdown:[
+     {c:"toHaveText", e:"точное/частичное совпадение текстового содержимого элемента"},
+     {c:"toHaveURL", e:"проверка текущего URL страницы (можно регуляркой)"},
+     {c:"toBeVisible / toBeEnabled", e:"проверка видимости или доступности элемента для взаимодействия"}
+   ],
+   custom:"Подставьте <code>data-testid</code> и ожидаемые значения из <b>вашего</b> приложения. Для числовых/изменяющихся данных предпочитайте мягкие проверки (toBeVisible, toContainText) вместо жёстких точных совпадений.",
+   tip:"Всегда ставьте await перед expect(...) с async-матчерами — иначе проверка не дождётся результата и тест может 'соврать'."},
+
+  {cmd:"test & describe", name:"Структура тестов", cat:"Организация",
+   code:`<span class="fn">test</span>.<span class="fn">describe</span>(<span class="str">'Checkout flow'</span>, () => {
+  <span class="fn">test</span>(<span class="str">'successful payment'</span>, <span class="kw">async</span> ({ page }) => {
+    <span class="com">// шаги теста</span>
+  });
+});`,
+   out:"Checkout flow\n  ✓ successful payment (1.2s)",
+   what:"test() описывает один тест-сценарий, test.describe() группирует связанные тесты в логический блок — это влияет на структуру отчёта и позволяет применять общие хуки/настройки к группе.",
+   breakdown:[
+     {c:"test.describe(name, fn)", e:"группа тестов с общим названием, видна в отчёте как раздел"},
+     {c:"test(name, async fn)", e:"сам тест; получает фикстуру page и другие через деструктуризацию аргумента"},
+     {c:"{ page }", e:"встроенная фикстура — отдельная изолированная вкладка браузера для этого теста"}
+   ],
+   custom:"Группируйте тесты по фичам <b>вашего</b> продукта (например 'Регистрация', 'Корзина', 'Профиль') — так отчёты читаются понятнее и легче находить упавший раздел.",
+   tip:"Каждый test() выполняется в чистом, изолированном контексте браузера — тесты не должны зависеть друг от друга по порядку выполнения."},
+
+  {cmd:"Fixtures", name:"Фикстуры", cat:"Организация",
+   code:`<span class="kw">export</span> <span class="kw">const</span> test = base.<span class="fn">extend</span>&lt;{ loggedInPage: Page }&gt;({
+  loggedInPage: <span class="kw">async</span> ({ page }, use) => {
+    <span class="kw">await</span> <span class="fn">page</span>.<span class="fn">goto</span>(<span class="str">'/login'</span>);
+    <span class="com">// ... логин</span>
+    <span class="kw">await</span> <span class="fn">use</span>(page);
+  }
+});`,
+   out:"loggedInPage доступна в любом тесте через аргумент",
+   what:"Фикстуры — переиспользуемые 'заготовки' окружения для тестов (например уже авторизованная страница, тестовый пользователь, тестовые данные), которые Playwright готовит и подчищает автоматически, избавляя от дублирования кода в каждом тесте.",
+   breakdown:[
+     {c:"base.extend({...})", e:"создание кастомного test с дополнительными фикстурами поверх встроенных"},
+     {c:"async ({page}, use) =>", e:"функция фикстуры: сначала подготовка, затем use(value) передаёт готовое значение в тест"},
+     {c:"use(page)", e:"точка, после которой выполняется сам тест; код после use — это teardown/очистка"}
+   ],
+   custom:"Сделайте фикстуру под реальный процесс логина <b>вашего</b> приложения — это избавит от копирования одинаковых шагов входа в десятках тестов.",
+   tip:"Фикстуры — основной механизм переиспользования в Playwright, предпочтительнее обычных helper-функций, так как поддерживают автоматический teardown."},
+
+  {cmd:"Hooks", name:"beforeEach / afterEach", cat:"Организация",
+   code:`<span class="fn">test</span>.<span class="fn">beforeEach</span>(<span class="kw">async</span> ({ page }) => {
+  <span class="kw">await</span> <span class="fn">page</span>.<span class="fn">goto</span>(<span class="str">'https://app.test/login'</span>);
+});`,
+   out:"Выполняется перед каждым тестом в describe-блоке",
+   what:"Хуки задают код, который автоматически выполняется до/после каждого теста (или один раз до/после всех тестов в группе) — удобно для общей подготовки и очистки состояния.",
+   breakdown:[
+     {c:"test.beforeEach", e:"выполняется перед каждым тестом в текущем describe"},
+     {c:"test.afterEach", e:"выполняется после каждого теста — хорошее место для логов/скриншотов при падении"},
+     {c:"test.beforeAll / afterAll", e:"выполняется один раз на весь блок (например поднять тестовые данные)"}
+   ],
+   custom:"Замените URL на адрес <b>вашего</b> приложения (staging/local окружение). В beforeEach удобно делать общие вещи: открыть страницу, авторизоваться, очистить localStorage.",
+   tip:"Не злоупотребляйте beforeAll для действий, зависящих от состояния — тесты должны быть независимы и воспроизводимы в любом порядке."},
+
+  {cmd:"Auto-waiting", name:"Автоожидание", cat:"Техника",
+   code:`<span class="kw">await</span> <span class="fn">page</span>.<span class="fn">getByRole</span>(<span class="str">'button'</span>, { name: <span class="str">'Отправить'</span> }).<span class="fn">click</span>();
+<span class="com">// Playwright сам дождётся, пока кнопка станет видимой и кликабельной</span>`,
+   out:"Клик выполнен сразу, как только элемент стал готов",
+   what:"Главное отличие Playwright от многих старых инструментов: перед каждым действием (click, fill и т.д.) он автоматически ждёт, пока элемент появится в DOM, станет видимым, не будет перекрыт и не будет отключён — без ручных sleep().",
+   breakdown:[
+     {c:"Actionability checks", e:"серия проверок перед действием: visible, stable, enabled, receives events"},
+     {c:"timeout (по умолчанию 30с)", e:"максимальное время ожидания готовности элемента перед действием"}
+   ],
+   custom:"Если элемент <b>вашего</b> приложения появляется с задержкой (например после загрузки по API) — ничего специально делать не нужно, автоожидание справится само. Ручной <code>waitForTimeout</code> используйте только как крайний случай.",
+   warn:"Избегайте page.waitForTimeout(ms) в тестах — это 'хрупкий' костыль, из-за которого тесты либо медленные, либо случайно падают."},
+
+  {cmd:"Page Object", name:"Page Object Model", cat:"Архитектура",
+   code:`<span class="kw">export</span> <span class="kw">class</span> <span class="fn">LoginPage</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> page: Page) {}
+  <span class="fn">async</span> <span class="fn">login</span>(user: string, pass: string) {
+    <span class="kw">await</span> <span class="fn">this</span>.page.<span class="fn">getByTestId</span>(<span class="str">'email'</span>).<span class="fn">fill</span>(user);
+    <span class="kw">await</span> <span class="fn">this</span>.page.<span class="fn">getByTestId</span>(<span class="str">'submit'</span>).<span class="fn">click</span>();
+  }
+}`,
+   out:"new LoginPage(page).login('a@b.com', '123') — в любом тесте",
+   what:"Паттерн, при котором взаимодействие со страницей (локаторы + действия) выносится в отдельный класс. Тесты становятся читаемыми бизнес-сценариями, а детали вёрстки спрятаны в одном месте.",
+   breakdown:[
+     {c:"class LoginPage", e:"один класс = одна страница/компонент приложения"},
+     {c:"constructor(page)", e:"класс получает page при создании и хранит её для своих методов"},
+     {c:"метод login()", e:"бизнес-действие высокого уровня, собранное из низкоуровневых локаторов"}
+   ],
+   custom:"Создайте по одному Page Object на каждый ключевой экран <b>вашего</b> приложения (LoginPage, CartPage, CheckoutPage) — при изменении вёрстки править нужно будет только один класс, а не десятки тестов.",
+   tip:"Если вёрстка в проекте меняется часто — POM окупается очень быстро, экономя часы на поддержку тестов."},
+
+  {cmd:"API Testing", name:"Тестирование API", cat:"Техника",
+   code:`<span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">request</span>.<span class="fn">post</span>(<span class="str">'/api/login'</span>, {
+  data: { email: <span class="str">'user@mail.com'</span>, password: <span class="str">'123'</span> }
+});
+<span class="kw">await</span> <span class="fn">expect</span>(response).<span class="fn">toBeOK</span>();`,
+   out:"200 OK, body: { token: '...' }",
+   what:"Playwright умеет отправлять HTTP-запросы напрямую (без браузера) через встроенный APIRequestContext — полезно для подготовки данных перед UI-тестом или для прямого тестирования backend.",
+   breakdown:[
+     {c:"request.post/get/put", e:"HTTP-методы к API-эндпоинту"},
+     {c:"data: {...}", e:"тело запроса (автоматически сериализуется в JSON)"},
+     {c:"toBeOK()", e:"проверка, что статус ответа в диапазоне 200–299"}
+   ],
+   custom:"Замените <code>/api/login</code> на реальный эндпоинт <b>вашего</b> backend. Частый приём: создать тестового пользователя через API в beforeEach — это быстрее, чем регистрироваться через UI в каждом тесте.",
+   tip:"Комбинируйте: готовьте состояние (данные) через API, а проверяйте поведение — через UI. Так тесты быстрее и стабильнее."},
+
+  {cmd:"Visual Testing", name:"Скриншот-тесты", cat:"Техника",
+   code:`<span class="kw">await</span> <span class="fn">expect</span>(<span class="fn">page</span>).<span class="fn">toHaveScreenshot</span>(<span class="str">'homepage.png'</span>);`,
+   out:"Сравнение с эталонным скриншотом: различие 0.02% — в пределах порога",
+   what:"Playwright может сравнивать текущий вид страницы с сохранённым эталонным скриншотом и сообщать о визуальных регрессиях (сдвиги вёрстки, пропавшие элементы, неверные цвета).",
+   breakdown:[
+     {c:"toHaveScreenshot(name)", e:"при первом запуске сохраняет эталон, при следующих — сравнивает с ним"},
+     {c:"maxDiffPixelRatio", e:"опциональный порог допустимого различия, чтобы не ловить ложные срабатывания из-за сглаживания шрифтов"}
+   ],
+   custom:"Для <b>вашего</b> проекта начните с 2–3 самых стабильных по вёрстке страниц — сильно динамичный контент (даты, случайные данные) перед скриншотом стоит маскировать опцией mask.",
+   tip:"Эталонные скриншоты нужно обновлять осознанно (--update-snapshots) при каждом намеренном изменении дизайна, иначе тесты будут 'шуметь'."},
+
+  {cmd:"Config & CI", name:"playwright.config.ts", cat:"Инфраструктура",
+   code:`<span class="kw">export</span> <span class="kw">default</span> <span class="fn">defineConfig</span>({
+  workers: <span class="str">4</span>,
+  retries: <span class="str">2</span>,
+  use: { trace: <span class="str">'on-first-retry'</span> },
+});`,
+   out:"Running 48 tests using 4 workers",
+   what:"Центральный конфиг-файл проекта: сколько тестов гонять параллельно, сколько раз повторять упавшие, какие браузеры использовать, и как собирать диагностику (trace, видео, скриншоты) при падении.",
+   breakdown:[
+     {c:"workers", e:"число параллельных процессов — ускоряет прогон на CI"},
+     {c:"retries", e:"сколько раз автоматически перезапускать упавший тест (сглаживает 'флаки')"},
+     {c:"trace: 'on-first-retry'", e:"записывать полную трассировку (DOM, сеть, скриншоты по шагам) только при повторном падении — экономит место"}
+   ],
+   custom:"На CI обычно выставляют <code>workers</code> по числу ядер раннера, а <code>retries: 1–2</code> — чтобы единичные нестабильные тесты не роняли весь пайплайн. Добавьте запуск <code>npx playwright test</code> шагом в вашем GitHub Actions / GitLab CI.",
+   tip:"npx playwright show-trace trace.zip открывает записанную трассировку упавшего теста — один из самых мощных инструментов отладки в Playwright."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">spec.ts</div>
+      </div>
+      <div class="term-body">
+        <pre>${t.code}</pre>
+        <div class="out">${t.out}</div>
+      </div>
+    </div>
+
+    <div class="section-title">🎭 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Что это</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор кода</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своём проекте</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

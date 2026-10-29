@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 API + Postman</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:21px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.3px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12.5px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .req-bar{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:12px;
+  }
+  .method{
+    font-weight:800;font-size:11px;padding:3px 8px;border-radius:6px;flex:0 0 auto;
+  }
+  .m-GET{background:#0f3d2e;color:#2ecc71;}
+  .m-POST{background:#2a3410;color:#e2b93b;}
+  .m-PUT{background:#122a3d;color:#3ba0e2;}
+  .m-DELETE{background:#3d1212;color:#e23b3b;}
+  .url{color:var(--text);word-break:break-all;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:var(--purple);}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+  .jkey{color:#7fdbca;}
+
+  .sub-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px 2px;border-top:1px solid var(--panel-border);}
+  .resp-status{
+    display:inline-block;font-size:11.5px;font-weight:700;
+    padding:2px 8px;border-radius:6px;margin:6px 12px 0;
+  }
+  .st-2xx{background:#0f3d2e;color:#2ecc71;}
+  .st-4xx{background:#3d2a12;color:#f2a65a;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>API</span> + Postman</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Тестирование API через Postman · для начинающих QA</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Requests", name:"GET / POST / PUT / DELETE", cat:"Основы", method:"GET",
+   url:"{{base_url}}/api/users/42",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`{
+  <span class="jkey">"id"</span>: <span class="num">42</span>,
+  <span class="jkey">"email"</span>: <span class="str">"a@mail.com"</span>,
+  <span class="jkey">"status"</span>: <span class="str">"active"</span>
+}`,
+   what:"HTTP-метод определяет, какое действие вы просите сервер выполнить. GET — получить данные, POST — создать, PUT/PATCH — обновить, DELETE — удалить. В Postman метод выбирается в выпадающем списке слева от адресной строки.",
+   breakdown:[
+     {c:"GET", e:"запрос данных без изменения состояния сервера — безопасно вызывать повторно"},
+     {c:"POST", e:"создаёт новую сущность, тело запроса обычно содержит данные для создания"},
+     {c:"PUT / PATCH", e:"обновляют существующую сущность (PUT — целиком, PATCH — частично)"},
+     {c:"DELETE", e:"удаляет сущность по идентификатору"}
+   ],
+   custom:"Замените URL на реальный эндпоинт <b>вашего</b> API (его список обычно есть в Swagger/OpenAPI-документации проекта или у backend-разработчиков).",
+   tip:"Начинайте тестирование нового эндпоинта с GET — он безопасен и сразу показывает структуру реальных данных."},
+
+  {cmd:"Environments", name:"Переменные окружения", cat:"Организация", method:"GET",
+   url:"{{base_url}}/api/health",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`{ <span class="jkey">"status"</span>: <span class="str">"ok"</span> }`,
+   what:"Environment хранит набор переменных (base_url, token и т.п.), которые можно переключать одним кликом — например между Local, Staging и Production — не меняя запросы вручную.",
+   breakdown:[
+     {c:"{{base_url}}", e:"синтаксис подстановки переменной окружения в URL/заголовки/тело"},
+     {c:"Environment", e:"именованный набор пар ключ-значение (base_url=https://staging.site)"},
+     {c:"Globals", e:"переменные, доступные во всех окружениях и коллекциях сразу"}
+   ],
+   custom:"Создайте в Postman environment для <b>вашего</b> проекта с переменной <code>base_url</code> (например https://staging.yourapp.com) — все запросы в коллекции сразу станут переносимыми между окружениями.",
+   tip:"Никогда не хардкодьте в URL staging/prod напрямую — одна опечатка при копировании коллекции может случайно направить запрос не туда."},
+
+  {cmd:"Headers & Auth", name:"Заголовки и авторизация", cat:"Основы", method:"GET",
+   url:"{{base_url}}/api/profile",
+   headers:[["Authorization","Bearer {{token}}"],["Content-Type","application/json"]],
+   body:null,
+   status:"401 Unauthorized", statusClass:"st-4xx",
+   resp:`{ <span class="jkey">"error"</span>: <span class="str">"invalid or expired token"</span> }`,
+   what:"Заголовки передают метаданные запроса — чаще всего тип контента и данные авторизации. Без корректного заголовка Authorization большинство защищённых эндпоинтов вернут 401.",
+   breakdown:[
+     {c:"Authorization: Bearer <token>", e:"токен доступа, подтверждающий личность пользователя"},
+     {c:"Content-Type: application/json", e:"говорит серверу, что тело запроса — JSON"},
+     {c:"вкладка Authorization в Postman", e:"удобный интерфейс для Bearer/Basic/API Key — подставляет заголовок автоматически"}
+   ],
+   custom:"Получите действующий токен для <b>вашего</b> API (обычно через запрос логина) и сохраните его в переменную окружения <code>{{token}}</code> — тогда все защищённые запросы коллекции будут использовать его автоматически.",
+   tip:"401 Unauthorized означает проблему с личностью (токен невалиден), 403 Forbidden — личность известна, но прав недостаточно. Это разные баги."},
+
+  {cmd:"Request Body", name:"Тело запроса (JSON)", cat:"Основы", method:"POST",
+   url:"{{base_url}}/api/orders",
+   body:`{
+  <span class="jkey">"product_id"</span>: <span class="num">105</span>,
+  <span class="jkey">"quantity"</span>: <span class="num">2</span>,
+  <span class="jkey">"coupon"</span>: <span class="str">"SALE10"</span>
+}`,
+   status:"201 Created", statusClass:"st-2xx",
+   resp:`{
+  <span class="jkey">"order_id"</span>: <span class="num">1051</span>,
+  <span class="jkey">"total"</span>: <span class="num">18.90</span>
+}`,
+   what:"Тело запроса передаёт данные, которые сервер должен обработать (например параметры нового заказа). В Postman задаётся во вкладке Body, обычно в формате raw → JSON.",
+   breakdown:[
+     {c:"Body → raw → JSON", e:"режим ввода тела в Postman с подсветкой синтаксиса и автоформатированием"},
+     {c:"201 Created", e:"стандартный код успешного создания ресурса (в отличие от 200 OK)"}
+   ],
+   custom:"Сформируйте JSON с реальными полями, которые ожидает эндпоинт <b>вашего</b> API — их состав обычно описан в документации или можно подсмотреть, перехватив запрос из UI через DevTools.",
+   tip:"Проверяйте не только 'счастливый путь' с валидными данными, но и граничные случаи: отсутствующее обязательное поле, неверный тип, отрицательное количество."},
+
+  {cmd:"Tests (pm.test)", name:"Автоматические проверки", cat:"Автоматизация", method:"GET",
+   url:"{{base_url}}/api/users/42",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`<span class="com">// вкладка Tests:</span>
+<span class="fn">pm.test</span>(<span class="str">"Status is 200"</span>, () => {
+  <span class="fn">pm.response</span>.<span class="fn">to</span>.<span class="fn">have</span>.<span class="fn">status</span>(<span class="num">200</span>);
+});
+<span class="fn">pm.test</span>(<span class="str">"Has email field"</span>, () => {
+  <span class="kw">const</span> json = <span class="fn">pm.response</span>.<span class="fn">json</span>();
+  <span class="fn">pm.expect</span>(json.email).<span class="fn">to</span>.<span class="fn">exist</span>;
+});`,
+   what:"JS-скрипт во вкладке Tests, который выполняется после получения ответа и автоматически проверяет его (код статуса, структуру JSON, значения полей, время ответа). Результаты видны в виде зелёных/красных галочек.",
+   breakdown:[
+     {c:"pm.test(name, fn)", e:"одна именованная проверка, видна отдельной строкой в результатах"},
+     {c:"pm.response.to.have.status(200)", e:"проверка HTTP-кода ответа"},
+     {c:"pm.response.json()", e:"распарсить тело ответа как JSON для дальнейших проверок"},
+     {c:"pm.expect(...).to.exist", e:"синтаксис библиотеки Chai — проверка, что значение определено"}
+   ],
+   custom:"Добавляйте такие проверки сразу при создании запроса для <b>вашего</b> эндпоинта — минимум статус-код и наличие ключевых полей ответа. Это превращает ручной Postman-запрос в автотест.",
+   tip:"pm.response.responseTime — проверка времени ответа, полезно ловить деградацию производительности: pm.expect(pm.response.responseTime).to.be.below(500)."},
+
+  {cmd:"Pre-request Script", name:"Скрипт перед запросом", cat:"Автоматизация", method:"POST",
+   url:"{{base_url}}/api/orders",
+   body:`{ <span class="jkey">"idempotency_key"</span>: <span class="str">"{{$guid}}"</span> }`,
+   status:"201 Created", statusClass:"st-2xx",
+   resp:`<span class="com">// вкладка Pre-request Script:</span>
+<span class="fn">pm.environment</span>.<span class="fn">set</span>(
+  <span class="str">"timestamp"</span>, Date.now()
+);`,
+   what:"JS-код, который выполняется ДО отправки запроса — используется, чтобы динамически подготовить данные: сгенерировать timestamp, случайный ID, или подписать запрос перед отправкой.",
+   breakdown:[
+     {c:"pm.environment.set(key, value)", e:"записать значение в переменную окружения прямо перед отправкой"},
+     {c:"{{$guid}}, {{$timestamp}}", e:"встроенные динамические переменные Postman — не требуют скрипта"}
+   ],
+   custom:"Используйте Pre-request Script, если <b>вашему</b> API нужны значения, которые нельзя захардкодить (временная метка, уникальный idempotency-ключ, подпись запроса).",
+   tip:"Для простых случаев (просто случайное число/GUID) часто достаточно встроенных переменных {{$randomInt}}, {{$guid}} — скрипт не нужен вовсе."},
+
+  {cmd:"Chaining Requests", name:"Связка запросов", cat:"Автоматизация", method:"POST",
+   url:"{{base_url}}/api/login",
+   body:`{ <span class="jkey">"email"</span>: <span class="str">"qa@mail.com"</span>, <span class="jkey">"password"</span>: <span class="str">"123456"</span> }`,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`<span class="com">// в Tests этого запроса:</span>
+<span class="kw">const</span> json = <span class="fn">pm.response</span>.<span class="fn">json</span>();
+<span class="fn">pm.environment</span>.<span class="fn">set</span>(<span class="str">"token"</span>, json.token);`,
+   what:"Результат одного запроса сохраняется в переменную и используется в следующем — классика для сценария 'сначала залогинься, потом используй токен в остальных запросах коллекции'.",
+   breakdown:[
+     {c:"pm.response.json()", e:"получить тело ответа текущего запроса как объект"},
+     {c:"pm.environment.set('token', ...)", e:"сохранить значение из ответа в переменную окружения"},
+     {c:"{{token}} в следующем запросе", e:"использовать сохранённое значение в заголовке Authorization следующего запроса"}
+   ],
+   custom:"В запросе логина <b>вашего</b> API сохраните токен/ID созданной сущности в переменную окружения — тогда остальные запросы коллекции смогут ссылаться на него через {{token}} без ручного копирования.",
+   tip:"Так строятся полноценные E2E-сценарии в Postman: создать пользователя → залогиниться → создать заказ → проверить заказ, используя данные из предыдущих шагов."},
+
+  {cmd:"Collection Runner", name:"Запуск коллекции", cat:"Автоматизация", method:"POST",
+   url:"Collection: 'Orders API' (12 requests)",
+   body:null,
+   status:"11 passed · 1 failed", statusClass:"st-4xx",
+   resp:`Iteration 1/1
+✓ Login - 200 OK
+✓ Create order - 201 Created
+✗ Get order - expected 200, got 404`,
+   what:"Runner прогоняет все запросы коллекции подряд (один раз или несколько итераций с разными данными из CSV/JSON-файла) и показывает сводный отчёт прохождения всех pm.test проверок.",
+   breakdown:[
+     {c:"Iterations", e:"сколько раз повторить прогон всей коллекции (полезно с разными тестовыми данными)"},
+     {c:"Data file (CSV/JSON)", e:"внешний файл с набором входных данных — каждая строка = одна итерация"},
+     {c:"Delay", e:"пауза между запросами, если API чувствителен к частоте вызовов"}
+   ],
+   custom:"Соберите запросы <b>вашего</b> проекта в одну коллекцию с логичным порядком (как реальный пользовательский сценарий) и добавьте pm.test в каждый — Runner тогда покажет, какой шаг сценария сломался.",
+   tip:"Загрузите CSV с 10 разными наборами тестовых email/паролей — Runner прогонит один и тот же сценарий логина 10 раз с разными данными."},
+
+  {cmd:"Newman", name:"Запуск из командной строки / CI", cat:"CI/CD", method:"POST",
+   url:"newman run orders-api.postman_collection.json -e staging.postman_environment.json",
+   body:null,
+   status:"exit code 0", statusClass:"st-2xx",
+   resp:`→ Login
+  ✓ Status is 200
+→ Create order
+  ✓ Status is 201
+  ✓ Has order_id
+
+12 requests, 24 assertions, 0 failed`,
+   what:"Newman — консольная версия Postman: запускает экспортированную коллекцию без открытия приложения. Благодаря этому коллекцию можно встроить шагом в CI/CD-пайплайн и гонять автоматически при каждом деплое.",
+   breakdown:[
+     {c:"newman run <коллекция>.json", e:"запустить экспортированную из Postman коллекцию"},
+     {c:"-e <окружение>.json", e:"какое экспортированное окружение (переменные) использовать"},
+     {c:"exit code", e:"0 — все проверки прошли, не 0 — есть падения; CI ориентируется именно на этот код"}
+   ],
+   custom:"Экспортируйте коллекцию и окружение <b>вашего</b> проекта из Postman (⋮ → Export) и добавьте такую команду отдельным шагом в <code>.github/workflows</code> или другой CI-конфиг — API-тесты будут гоняться при каждом пуше.",
+   tip:"npm install -g newman — Newman устанавливается как обычный npm-пакет, отдельно от десктопного Postman не нужен."},
+
+  {cmd:"Mock Server", name:"Заглушка API", cat:"Инфраструктура", method:"GET",
+   url:"https://xxxx.mock.pstmn.io/api/users/42",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`{ <span class="jkey">"id"</span>: <span class="num">42</span>, <span class="jkey">"email"</span>: <span class="str">"mock@mail.com"</span> }`,
+   what:"Postman может поднять фиктивный сервер, который отвечает заранее заданными примерами ответов — полезно, когда backend ещё не готов, но нужно уже писать и проверять фронтенд/тесты против ожидаемого контракта API.",
+   breakdown:[
+     {c:"Mock Server", e:"создаётся из коллекции — каждый сохранённый пример ответа становится 'ответом по умолчанию'"},
+     {c:"mock.pstmn.io", e:"публичный домен, на котором Postman хостит мок-сервер"}
+   ],
+   custom:"Если backend <b>вашего</b> эндпоинта ещё не реализован — договоритесь с разработчиком о структуре ответа (контракте), сохраните её как Example в Postman и создайте по коллекции Mock Server — можно тестировать уже сейчас.",
+   tip:"Это также хороший способ зафиксировать ожидаемый контракт API до начала разработки — своего рода живая документация."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  const headersHTML = t.headers ? `
+    <div class="sub-label">Headers</div>
+    <div class="term-body" style="padding-top:4px;">${t.headers.map(h=>`<div><span style="color:#82aaff">${h[0]}:</span> <span class="str">${h[1]}</span></div>`).join('')}</div>
+  ` : '';
+
+  const bodyHTML = t.body ? `
+    <div class="sub-label">Body</div>
+    <div class="term-body" style="padding-top:4px;"><pre>${t.body}</pre></div>
+  ` : '';
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="req-bar">
+        <span class="method m-${t.method}">${t.method}</span>
+        <span class="url">${t.url}</span>
+      </div>
+      ${headersHTML}
+      ${bodyHTML}
+      <div class="sub-label">Response</div>
+      <span class="resp-status ${t.statusClass}">${t.status}</span>
+      <div class="term-body"><pre>${t.resp}</pre></div>
+    </div>
+
+    <div class="section-title">📮 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Для чего нужно</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своём проекте</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

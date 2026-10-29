@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Kubernetes для тестировщика</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:19px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.2px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 205px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  .prompt{color:var(--green);}
+  .cmdline{color:var(--text);}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:var(--purple);}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+  .jkey{color:#7fdbca;}
+  .pod{color:var(--cyan);font-weight:700;}
+  .bad{color:#ff5f5f;}
+  .ok{color:#2ecc71;}
+  .out{color:var(--muted);margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.5;}
+
+  table.restbl{border-collapse:collapse;margin-top:4px;font-size:11.5px;width:100%;}
+  table.restbl th{text-align:left;color:var(--cyan);border-bottom:1px solid var(--panel-border);padding:4px 8px 4px 0;}
+  table.restbl td{color:var(--muted);padding:4px 8px 4px 0;border-bottom:1px solid #161c26;}
+
+  .lens-ui{
+    background:#0b0f16;border:1px solid var(--panel-border);border-radius:8px;
+    padding:10px;font-size:11.5px;color:var(--muted);
+  }
+  .lens-ui .step{display:flex;gap:8px;margin-bottom:5px;align-items:flex-start;}
+  .lens-ui .step .n{color:var(--cyan);font-weight:700;flex:0 0 16px;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Kubernetes</span> для тестировщика</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">kubectl + Lens — основы для тестирования сервисов в кластере</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Port-forward", name:"Проброс порта до сервиса", cat:"Доступ", kind:"lens",
+   lens:[
+     ["1","Открыть кластер в Lens → раздел Workloads → Pods"],
+     ["2","Найти под нужного сервиса, например orders-service-7d9f8"],
+     ["3","Правый клик → Port Forward → указать локальный порт (например 8080 → 8080)"],
+     ["4","Lens держит проброс активным, пока открыто это окно"]
+   ],
+   cliLine:"kubectl port-forward pod/orders-service-7d9f8 8080:8080 -n staging",
+   cliOut:"Forwarding from 127.0.0.1:8080 -> 8080\nForwarding from [::1]:8080 -> 8080",
+   what:"Порт-форвардинг создаёт временный туннель с вашей локальной машины напрямую в под внутри кластера — сервис, который обычно недоступен снаружи (нет Ingress/внешнего IP), становится доступен на localhost. Это самый частый способ для QA достучаться до сервиса в приватном кластере без разворачивания своего окружения.",
+   breakdown:[
+     {c:"pod/orders-service-7d9f8", e:"конкретный под, до которого пробрасываем порт (можно также deployment/... или service/...)"},
+     {c:"8080:8080", e:"локальный_порт:порт_в_поде — не обязаны совпадать, например 9000:8080"},
+     {c:"-n staging", e:"namespace, в котором находится под — без него kubectl ищет в default"}
+   ],
+   custom:"Замените имя пода на реальное имя сервиса <b>вашего</b> тестируемого микросервиса — его точное имя (с случайным суффиксом) можно увидеть в списке подов (см. карточку 'kubectl get pods'). После проброса обращайтесь к сервису как к обычному localhost:8080 — в Postman, браузере, curl.",
+   tip:"Pod может перезапуститься и получить новое имя — если проброс вдруг 'отвалился' с ошибкой, просто создайте его заново уже для нового имени пода, либо пробрасывайте через service/orders-service — это имя стабильнее."},
+
+  {cmd:"kubectl get pods", name:"Статус подов", cat:"Диагностика", kind:"cli",
+   cliLine:"kubectl get pods -n staging",
+   cliOut:"NAME                          READY   STATUS             RESTARTS   AGE\norders-service-7d9f8          1/1     Running            0          2d\npayment-service-4a1c2         0/1     CrashLoopBackOff   14         3h",
+   what:"Показывает список подов в namespace и их текущее состояние — живы ли они, сколько раз перезапускались, в каком статусе. Первая команда для быстрой проверки 'сервис вообще поднят и работает?' перед тем, как тестировать его функциональность.",
+   breakdown:[
+     {c:"READY 1/1", e:"сколько контейнеров внутри пода готовы из общего числа — 1/1 значит всё в порядке"},
+     {c:"STATUS: Running", e:"под работает нормально"},
+     {c:"STATUS: CrashLoopBackOff", e:"контейнер постоянно падает и Kubernetes раз за разом пытается его перезапустить"},
+     {c:"RESTARTS", e:"сколько раз под перезапускался — большое число почти всегда сигнал проблемы"}
+   ],
+   custom:"Перед тем как заводить баг 'функция не работает' в <b>вашем</b> тестовом окружении — проверьте kubectl get pods: если сервис в CrashLoopBackOff, то дело не в баге бизнес-логики, а в том, что сервис вообще не поднялся.",
+   tip:"kubectl get pods -w (watch) — показывает изменения статуса подов в реальном времени, удобно наблюдать за рестартом/деплоем прямо во время теста."},
+
+  {cmd:"kubectl logs", name:"Логи контейнера", cat:"Диагностика", kind:"cli",
+   cliLine:"kubectl logs orders-service-7d9f8 -n staging --tail=50 -f",
+   cliOut:"2026-10-29 12:40:01 INFO  Starting application\n2026-10-29 12:40:03 INFO  Connected to DB\n2026-10-29 12:41:15 ERROR Payment timeout for order 1051",
+   what:"Выводит логи приложения внутри конкретного пода — тот же стандартный вывод (stdout/stderr), что видел бы разработчик, запусти он приложение локально. Основной способ понять причину проблемы без доступа к коду.",
+   breakdown:[
+     {c:"--tail=50", e:"показать только последние 50 строк, а не весь накопленный лог"},
+     {c:"-f (follow)", e:"продолжать выводить новые строки в реальном времени — аналог tail -f"},
+     {c:"-p (previous)", e:"показать логи ПРЕДЫДУЩЕГО запуска контейнера — критично для CrashLoopBackOff, когда текущий под уже перезапустился и свежих логов ещё нет"}
+   ],
+   custom:"Запустите логи с -f в отдельном окне перед воспроизведением бага в <b>вашем</b> тестовом окружении — так же, как tail -f в обычном Linux, только для контейнера внутри кластера.",
+   tip:"В Lens логи доступны прямо в интерфейсе: клик по поду → вкладка Logs — не нужно даже помнить команду, особенно удобно, если под с несколькими контейнерами и нужно выбрать нужный."},
+
+  {cmd:"kubectl exec", name:"Шелл внутри контейнера", cat:"Диагностика", kind:"cli",
+   cliLine:"kubectl exec -it orders-service-7d9f8 -n staging -- sh",
+   cliOut:"/app # env | grep DB_\nDB_HOST=postgres.staging.svc.cluster.local\nDB_PORT=5432",
+   what:"Открывает интерактивную сессию (как обычный SSH) прямо внутри работающего контейнера — можно посмотреть переменные окружения, проверить файлы конфигурации, вручную выполнить curl к соседнему сервису изнутри кластера.",
+   breakdown:[
+     {c:"-it", e:"интерактивный режим с терминалом (interactive + tty) — без него команда просто выполнится и завершится"},
+     {c:"-- sh", e:"какую команду/оболочку запустить внутри контейнера (sh чаще доступен, чем bash, в минимальных образах)"},
+     {c:"-c &lt;имя&gt;", e:"если под содержит НЕСКОЛЬКО контейнеров — нужно явно указать, в какой именно зайти"}
+   ],
+   custom:"Если в <b>вашем</b> приложении подозреваете неверную переменную окружения или конфиг — зайдите внутрь пода и проверьте её реальное значение (env | grep ...) вместо догадок по внешнему поведению.",
+   warn:"exec внутрь пода — это прямое вмешательство в работающий контейнер; не меняйте там файлы 'на постоянку' — любые правки пропадут при следующем перезапуске/пересоздании пода, и это не замена нормальному деплою."},
+
+  {cmd:"ConfigMap & Secret", name:"Конфигурация сервиса", cat:"Конфигурация", kind:"cli",
+   cliLine:"kubectl get configmap orders-config -n staging -o yaml",
+   cliOut:"data:\n  FEATURE_NEW_CHECKOUT: \"true\"\n  MAX_RETRY_COUNT: \"3\"",
+   what:"ConfigMap хранит некритичные настройки приложения (feature-флаги, лимиты, URL) в виде обычного текста, Secret — то же самое, но для чувствительных данных (пароли, токены), значения в нём закодированы base64. Оба подключаются к поду как переменные окружения или файлы.",
+   breakdown:[
+     {c:"kubectl get configmap -o yaml", e:"посмотреть все ключи и значения конкретного ConfigMap"},
+     {c:"kubectl get secret -o yaml", e:"то же для Secret — но значения придётся дополнительно декодировать из base64"},
+     {c:"FEATURE_NEW_CHECKOUT", e:"типичный пример feature-флага, управляющего поведением приложения без пересборки кода"}
+   ],
+   custom:"Если фича в <b>вашем</b> тестовом окружении 'не включается' — проверьте реальное значение соответствующего флага в ConfigMap: возможно, он выключен именно в staging, а баг тут ни при чём.",
+   tip:"В Lens ConfigMaps и Secrets — отдельные разделы в меню Config, значения можно посмотреть визуально, без ручного декодирования base64 для Secret — Lens делает это сам."},
+
+  {cmd:"kubectl rollout restart", name:"Перезапуск после изменений", cat:"Управление", kind:"cli",
+   cliLine:"kubectl rollout restart deployment/orders-service -n staging",
+   cliOut:"deployment.apps/orders-service restarted\n\nkubectl rollout status deployment/orders-service\nWaiting for rollout to finish: 1 old replicas pending termination...",
+   what:"Поочерёдно пересоздаёт поды деплоймента (без простоя всего сервиса) — нужно, например, после того как изменился ConfigMap/Secret, который сам по себе не триггерит автоматический перезапуск подов, использующих его.",
+   breakdown:[
+     {c:"rollout restart deployment/...", e:"запускает плавный перезапуск: новые поды поднимаются, старые гасятся по очереди"},
+     {c:"rollout status", e:"следить за прогрессом перезапуска — когда новые поды реально готовы принимать трафик"}
+   ],
+   custom:"Если вы поменяли значение в ConfigMap <b>вашего</b> сервиса для теста feature-флага и ничего не изменилось — скорее всего нужен rollout restart: большинство приложений читают переменные окружения только при старте, а не 'на лету'.",
+   tip:"В Lens то же самое делается кнопкой 'Restart' на странице деплоймента — не обязательно помнить команду для рутинной операции."},
+
+  {cmd:"Pod / Deployment / Service", name:"Базовые объекты", cat:"Основы", kind:"table",
+   table:[
+     ["Объект","Что это"],
+     ["Pod","один работающий экземпляр контейнера(ов) — 'живая' единица приложения"],
+     ["Deployment","описание желаемого состояния: сколько реплик Pod'а должно быть, какой образ использовать"],
+     ["Service","стабильный сетевой адрес, который балансирует трафик между подами (поды появляются/исчезают, Service — постоянен)"]
+   ],
+   what:"Три базовых объекта, которые нужно уметь отличать, чтобы ориентироваться в кластере. Deployment управляет подами (сколько их должно быть и какой версии), Pod — это реально работающий инстанс, а Service — стабильная точка входа, за которой эти поды прячутся.",
+   breakdown:[
+     {c:"Pod эфемерен", e:"может быть удалён и пересоздан в любой момент (например при деплое) — получит новое случайное имя"},
+     {c:"Deployment следит за количеством", e:"если Pod упал, Deployment автоматически создаст новый взамен"},
+     {c:"Service не меняется", e:"его DNS-имя (orders-service.staging.svc.cluster.local) стабильно, даже когда поды за ним меняются"}
+   ],
+   custom:"Когда пробрасываете порт или смотрите логи в <b>вашем</b> кластере — помните, что конкретное имя пода изменится после следующего деплоя; если нужен стабильный адрес для регулярного использования, пробрасывайте порт до service/orders-service, а не до конкретного Pod'а.",
+   tip:"В Lens структура кластера визуально разложена по этим же категориям в левом меню (Workloads → Pods / Deployments, Network → Services) — это прямое отражение терминологии Kubernetes."},
+
+  {cmd:"kubectl scale", name:"Изменение числа реплик", cat:"Управление", kind:"cli",
+   cliLine:"kubectl scale deployment/orders-service --replicas=3 -n staging",
+   cliOut:"deployment.apps/orders-service scaled\n\nNAME             READY   AGE\norders-service   3/3     12s",
+   what:"Меняет количество запущенных реплик (подов) деплоймента вручную. Полезно для тестирования горизонтального масштабирования: проверить, что запросы действительно распределяются между несколькими инстансами, или временно уменьшить реплики до 0 для имитации полной недоступности сервиса.",
+   breakdown:[
+     {c:"--replicas=3", e:"желаемое количество подов — Kubernetes сам создаст недостающие или удалит лишние"},
+     {c:"--replicas=0", e:"фактически 'выключает' сервис, оставляя его конфигурацию нетронутой — удобно для теста поведения зависимых сервисов при полной недоступности"}
+   ],
+   custom:"Для проверки отказоустойчивости <b>вашей</b> системы временно отмасштабируйте зависимый сервис до 0 реплик на тестовом окружении и понаблюдайте, как основной сервис обрабатывает его недоступность (см. также карточки про Circuit Breaker из темы микросервисов).",
+   warn:"Если в кластере настроен HPA (автомасштабирование) — он может сам вернуть число реплик к рассчитанному значению вскоре после вашего ручного scale; для стабильного теста недоступности может понадобиться временно отключить HPA."},
+
+  {cmd:"Namespace", name:"Изоляция окружений", cat:"Основы", kind:"cli",
+   cliLine:"kubectl get namespaces",
+   cliOut:"NAME         STATUS   AGE\ndefault      Active   180d\nstaging      Active   120d\nqa-feature-42   Active   2h",
+   what:"Namespace — логическая 'перегородка' внутри одного кластера, разделяющая ресурсы разных окружений или команд (staging, qa, прод-подобные тестовые стенды). Одни и те же имена сервисов могут существовать в разных namespace независимо друг от друга.",
+   breakdown:[
+     {c:"kubectl get namespaces", e:"список всех namespace, доступных в кластере"},
+     {c:"-n &lt;namespace&gt;", e:"флаг, который нужно добавлять почти к каждой команде выше, иначе kubectl будет смотреть в default"},
+     {c:"kubectl config set-context --current --namespace=qa-feature-42", e:"сменить namespace 'по умолчанию' для текущей сессии, чтобы не писать -n каждый раз"}
+   ],
+   custom:"Уточните у DevOps/лида точное имя namespace <b>вашего</b> тестового окружения — в больших кластерах часто есть несколько похожих (staging, qa, qa-feature-branch-X), и путаница между ними — частая причина 'я тестирую, а изменений не вижу'.",
+   tip:"В Lens текущий namespace выбирается выпадающим списком сверху — переключение избавляет от необходимости держать его в голове при каждой команде."},
+
+  {cmd:"Lens / k9s", name:"Графические инструменты", cat:"Инструменты", kind:"cli",
+   cliLine:"# графический аналог множества команд выше",
+   cliOut:"Lens: десктоп-приложение, дерево кластера, логи, exec,\n      port-forward — всё кликами, без терминала\n\nk9s: похожий функционал, но в самом терминале (TUI)",
+   what:"Lens и k9s — инструменты, визуализирующие кластер Kubernetes, чтобы не держать в голове десятки команд kubectl. Lens — полноценное десктоп-приложение с GUI, k9s — похожий по возможностям интерфейс, но работающий прямо в терминале.",
+   breakdown:[
+     {c:"Lens", e:"дерево namespace → подов → деплойментов, клик открывает логи/exec/port-forward в пару кликов"},
+     {c:"k9s", e:"для тех, кто предпочитает терминал — такая же навигация, но клавиатурой, без мыши"},
+     {c:"оба читают тот же kubeconfig", e:"что и обычный kubectl — отдельная настройка доступа не нужна, если kubectl уже подключён к кластеру"}
+   ],
+   custom:"Если вы часто взаимодействуете с <b>вашим</b> тестовым кластером (смотрите логи, пробрасываете порты по нескольку раз в день) — поставьте Lens: команды из карточек выше делаются там в 1-2 клика, без необходимости помнить синтаксис kubectl.",
+   tip:"Понимание того, ЧТО делает Lens под капотом (какую именно команду kubectl он вызывает за вас) всё равно полезно — пригодится, если понадобится доступ к кластеру с машины, где Lens не установлен (например через SSH)."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  let bodyHTML = '';
+  if(t.kind === 'lens'){
+    const stepsHTML = t.lens.map(s=>`<div class="step"><span class="n">${s[0]}</span><span>${s[1]}</span></div>`).join('');
+    bodyHTML = `
+      <div class="term-body">
+        <div class="lens-ui">
+          <div style="color:var(--cyan);font-weight:700;margin-bottom:6px;">🔭 В Lens:</div>
+          ${stepsHTML}
+        </div>
+        <div style="margin-top:10px;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;">Эквивалент в kubectl</div>
+        <div style="margin-top:4px;"><span class="prompt">~$</span> <span class="cmdline">${t.cliLine}</span></div>
+        <div class="out">${t.cliOut}</div>
+      </div>`;
+  } else if(t.kind === 'table'){
+    const head = `<tr>${t.table[0].map(c=>`<th>${c}</th>`).join('')}</tr>`;
+    const rows = t.table.slice(1).map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('');
+    bodyHTML = `<div class="term-body"><table class="restbl"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
+  } else {
+    bodyHTML = `
+      <div class="term-body">
+        <div><span class="prompt">~$</span> <span class="cmdline">${t.cliLine}</span></div>
+        <div class="out">${t.cliOut}</div>
+      </div>`;
+  }
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">kubernetes</div>
+      </div>
+      ${bodyHTML}
+    </div>
+
+    <div class="section-title">☸️ ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Что это</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Ключевые понятия</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

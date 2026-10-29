@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 RabbitMQ для тестировщика</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:19px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.2px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:var(--purple);}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+  .jkey{color:#7fdbca;}
+  .ex{color:var(--orange);font-weight:700;}
+  .q{color:var(--cyan);font-weight:700;}
+  .bad{color:#ff5f5f;}
+  .ok{color:#2ecc71;}
+
+  table.restbl{border-collapse:collapse;margin-top:4px;font-size:11.5px;width:100%;}
+  table.restbl th{text-align:left;color:var(--cyan);border-bottom:1px solid var(--panel-border);padding:4px 8px 4px 0;}
+  table.restbl td{color:var(--muted);padding:4px 8px 4px 0;border-bottom:1px solid #161c26;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>RabbitMQ</span> для тестировщика</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Основы работы с RabbitMQ для тестирования асинхронных систем</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Exchange", name:"Типы обменников", cat:"Основы",
+   body:`<span class="ex">orders.exchange</span> (type: <span class="str">topic</span>)
+
+routing key <span class="str">"order.created"</span>
+         │
+         ▼ matches "order.*"
+   <span class="q">order-notify-queue</span>`,
+   what:"Exchange — точка входа сообщения в RabbitMQ. Producer никогда не отправляет сообщение напрямую в очередь, только в exchange, а уже тот решает (по своему типу и правилам), в какие очереди его направить.",
+   breakdown:[
+     {c:"direct", e:"сообщение идёт в очередь, если routing key совпадает ТОЧНО"},
+     {c:"topic", e:"routing key сравнивается по шаблону с wildcard'ами (order.* , *.failed)"},
+     {c:"fanout", e:"сообщение рассылается во ВСЕ привязанные очереди, routing key игнорируется"},
+     {c:"headers", e:"маршрутизация по заголовкам сообщения, а не по routing key"}
+   ],
+   custom:"Узнайте у разработчиков, какой тип exchange используется в <b>вашей</b> системе для тестируемого потока — это определяет, какое поведение маршрутизации вы должны проверять (например при fanout все подписчики должны получить копию, а не только один).",
+   tip:"Если сообщение 'потерялось' и ни в одну очередь не попало — первое, что стоит проверить: совпадает ли routing key с условиями существующих bindings exchange'а."},
+
+  {cmd:"Queue", name:"Очередь сообщений", cat:"Основы",
+   body:`<span class="q">order-notify-queue</span>
+
+[msg1] [msg2] [msg3] → ready
+            consumer читает FIFO`,
+   what:"Queue — буфер, где сообщения физически хранятся, пока их не заберёт consumer. В отличие от Kafka, где сообщения остаются в топике и после прочтения, в классической очереди RabbitMQ сообщение обычно удаляется после успешного подтверждения обработки (ack).",
+   breakdown:[
+     {c:"ready", e:"сообщения, ожидающие доставки какому-либо consumer'у"},
+     {c:"unacked", e:"сообщения, уже доставленные consumer'у, но ещё не подтверждённые (ack)"},
+     {c:"FIFO в пределах очереди", e:"порядок внутри одной очереди сохраняется (в отличие от распределения по нескольким consumer'ам)"}
+   ],
+   custom:"В Management UI <b>вашего</b> RabbitMQ (обычно http://host:15672) найдите очередь вашего тестируемого сервиса и понаблюдайте за счётчиками ready/unacked во время теста — застрявшие unacked сообщения говорят о проблеме с подтверждением обработки.",
+   tip:"Если очередей со сложными именами много — используйте поиск/фильтр в Management UI вместо прокрутки длинного списка вручную."},
+
+  {cmd:"Binding & Routing Key", name:"Связка и ключ маршрутизации", cat:"Основы",
+   body:`<span class="ex">orders.exchange</span>
+   │ binding: routing key pattern "order.#"
+   ▼
+<span class="q">audit-log-queue</span>
+
+<span class="com">// отправлено с key "order.created.eu"</span>
+<span class="ok">✓</span> # совпадает с любым количеством слов`,
+   what:"Binding — это правило, связывающее exchange с конкретной очередью, с условием (routing key или паттерн), при каком именно сообщении очередь его получит. Одна очередь может иметь несколько bindings, в том числе на разные exchange.",
+   breakdown:[
+     {c:"routing key", e:"строка-метка, которую producer указывает при отправке сообщения (например order.created)"},
+     {c:"* в паттерне (topic exchange)", e:"заменяет ровно одно слово в ключе"},
+     {c:"# в паттерне (topic exchange)", e:"заменяет ноль или более слов"}
+   ],
+   custom:"Если ожидаете, что событие <b>вашего</b> сервиса попадёт в конкретную очередь, но этого не происходит — в Management UI откройте вкладку Bindings у exchange и сверьте паттерн с реальным routing key отправленного сообщения.",
+   tip:"Опечатка в routing key (order.created вместо orders.created) — одна из самых частых причин 'сообщение отправлено, но никто его не получил', и внешне это выглядит как тихий сбой без ошибок."},
+
+  {cmd:"Publisher", name:"Отправка тестового сообщения", cat:"Инструменты",
+   code:`channel.<span class="fn">publish</span>(
+  <span class="str">'orders.exchange'</span>,
+  <span class="str">'order.created'</span>,
+  Buffer.<span class="fn">from</span>(JSON.<span class="fn">stringify</span>({ orderId: <span class="num">1051</span> })),
+  { persistent: <span class="kw">true</span> }
+);`,
+   out:"Message published to orders.exchange",
+   what:"Publisher — код (или тестовый скрипт), который отправляет сообщение в exchange. Для тестировщика умение самому опубликовать тестовое сообщение — способ проверить реакцию consumer'а напрямую, без необходимости выполнять весь бизнес-сценарий через UI.",
+   breakdown:[
+     {c:"exchange, routing key", e:"куда и с каким ключом отправляется сообщение"},
+     {c:"Buffer / тело сообщения", e:"полезная нагрузка — обычно JSON, сериализованный в байты"},
+     {c:"persistent: true", e:"флаг, что сообщение нужно сохранить на диск, а не только в памяти (см. карточку Durability)"}
+   ],
+   custom:"Для тестирования consumer'а <b>вашего</b> сервиса напишите небольшой скрипт-publisher (на любом языке с RabbitMQ-клиентом) или используйте Management UI (вкладка очереди → 'Publish message') — это быстрее, чем воспроизводить весь UI-сценарий ради одного события.",
+   tip:"Через Management UI можно опубликовать сообщение вручную прямо в браузере — полезно для разовой быстрой проверки без написания кода."},
+
+  {cmd:"Consumer & Ack", name:"Подтверждение обработки", cat:"Надёжность",
+   body:`Consumer получил msg1
+
+<span class="com">успешно обработал →</span> <span class="ok">ack</span>  → удалено из очереди
+<span class="com">ошибка обработки →</span>  <span class="bad">nack</span> → requeue=true → вернётся в очередь`,
+   what:"После получения сообщения consumer должен явно подтвердить (ack), что обработал его успешно — только тогда RabbitMQ удалит сообщение из очереди. Если подтверждения не было (consumer упал, или явно отправил nack), сообщение вернётся в очередь для повторной обработки.",
+   breakdown:[
+     {c:"ack", e:"подтверждение успешной обработки — сообщение окончательно удаляется"},
+     {c:"nack / reject", e:"явный отказ от обработки — можно указать requeue: вернуть в очередь или отбросить"},
+     {c:"auto-ack (опасный режим)", e:"сообщение считается обработанным сразу при получении, ДО реальной обработки — риск потери при падении consumer'а"}
+   ],
+   custom:"Проверьте в <b>вашем</b> сервисе-потребителе сценарий: consumer получает сообщение и падает (искусственно, например kill -9) ДО вызова ack — сообщение должно вернуться в очередь и быть обработано повторно, а не потеряться.",
+   warn:"Режим auto-ack часто используют 'для простоты' в начале разработки, но он означает, что при падении сервиса посреди обработки сообщение теряется безвозвратно — обязательно уточните у разработчиков, какой режим используется."},
+
+  {cmd:"Dead Letter Exchange", name:"Обработка недоставленных сообщений", cat:"Надёжность",
+   body:`<span class="q">order-queue</span>
+   │ сообщение отклонено (nack, requeue=false)
+   │ или истёк TTL
+   ▼
+<span class="ex">orders.dlx</span> → <span class="q">order-queue.dead</span>`,
+   what:"Аналог DLQ в Kafka: очередь может быть настроена так, что сообщения, которые не удалось обработать (явный reject без requeue, превышение числа попыток, истечение TTL), автоматически перенаправляются в отдельный 'dead letter' exchange и очередь для последующего разбора.",
+   breakdown:[
+     {c:"x-dead-letter-exchange", e:"аргумент очереди, указывающий, куда направлять 'проблемные' сообщения"},
+     {c:"x-dead-letter-routing-key", e:"опционально — с каким routing key пересылать в dead letter exchange"},
+     {c:"Причины dead-lettering", e:"явный reject/nack без requeue, истечение TTL, переполнение очереди (при настроенном лимите)"}
+   ],
+   custom:"Протестируйте намеренно 'плохое' сообщение (например нарушающее ожидаемый формат) в очереди <b>вашего</b> сервиса — убедитесь, что оно не застревает в бесконечном цикле nack→requeue→nack, а в итоге оказывается в dead letter очереди для разбора.",
+   tip:"Если у очереди вашего проекта не настроен dead letter exchange — 'битые' сообщения при ошибке просто бесконечно возвращаются в очередь, что может создать петлю нагрузки на consumer; это стоит обсудить с разработчиками как потенциальный риск."},
+
+  {cmd:"Durability", name:"Устойчивость к перезапуску", cat:"Надёжность",
+   table:[
+     ["Настройка","Переживёт restart брокера?"],
+     ["durable queue + persistent message","<span class='ok'>да</span>"],
+     ["durable queue + НЕ persistent message","<span class='bad'>нет</span>, сообщения теряются"],
+     ["НЕ durable (transient) queue","<span class='bad'>нет</span>, очередь исчезает целиком"]
+   ],
+   what:"Durability определяет, переживут ли очередь и находящиеся в ней сообщения перезапуск/падение брокера RabbitMQ. Для этого нужны оба условия сразу: очередь должна быть создана как durable, И каждое сообщение должно быть отправлено с флагом persistent.",
+   breakdown:[
+     {c:"durable (очередь)", e:"сама структура очереди сохраняется на диске и переживёт перезапуск брокера"},
+     {c:"persistent (сообщение)", e:"конкретное сообщение записывается на диск, а не хранится только в памяти"}
+   ],
+   custom:"Для критичных потоков <b>вашего</b> проекта (платежи, заказы) протестируйте сценарий перезапуска брокера (на тестовом окружении!) с сообщениями в очереди — если хотя бы одно из двух условий durability не настроено, вы потеряете данные при любом сбое/обновлении RabbitMQ.",
+   warn:"Durable + persistent — медленнее (запись на диск), поэтому разработчики иногда сознательно жертвуют этим ради скорости в некритичных очередях; важно, чтобы это было осознанным решением, а не забытой настройкой по умолчанию."},
+
+  {cmd:"Management UI", name:"Веб-интерфейс мониторинга", cat:"Инструменты",
+   body:`http://localhost:15672
+
+Queues:
+<span class="q">order-queue</span>     ready: 12   unacked: 2
+<span class="q">payment-queue</span>   ready: 0    unacked: 0
+<span class="q">order-queue.dead</span> ready: 3  <span class="bad">← есть мёртвые письма</span>`,
+   what:"Встроенная веб-панель RabbitMQ для визуального мониторинга: список очередей и exchange'ей, их состояние, графики пропускной способности, возможность вручную опубликовать или забрать (и посмотреть) сообщение из очереди прямо в браузере.",
+   breakdown:[
+     {c:"localhost:15672", e:"адрес по умолчанию, логин/пароль обычно guest/guest на локальном окружении (на остальных — свои)"},
+     {c:"Get message(s)", e:"кнопка в очереди, позволяющая посмотреть содержимое сообщений без их публикации заново"},
+     {c:"Purge", e:"полностью очистить очередь от всех сообщений — удобно перед чистым прогоном тестов"}
+   ],
+   custom:"Сохраните в закладках адрес Management UI <b>вашего</b> тестового окружения — это первое место, куда стоит заглянуть при подозрении на проблему с асинхронной обработкой, прежде чем просить логи у разработчика.",
+   tip:"Кнопка 'Get message(s)' по умолчанию забирает сообщение из очереди НЕ требеуя его обратно (если не включить 'Requeue') — будьте аккуратны при просмотре сообщений в разделяемом тестовом окружении, чтобы случайно не 'съесть' сообщение, нужное кому-то ещё."},
+
+  {cmd:"Prefetch Count", name:"Контроль нагрузки на consumer", cat:"Производительность",
+   body:`channel.<span class="fn">prefetch</span>(<span class="num">1</span>)
+
+<span class="com">// consumer получает по одному сообщению</span>
+<span class="com">// следующее — только после ack предыдущего</span>`,
+   what:"Prefetch count ограничивает, сколько НЕподтверждённых (unacked) сообщений брокер может одновременно 'раздать' одному consumer'у. Без ограничения consumer может захлебнуться, получив сразу тысячи сообщений до того, как успеет их обработать.",
+   breakdown:[
+     {c:"prefetch = 1", e:"consumer обрабатывает строго по одному сообщению — медленнее, но предсказуемо и справедливо между несколькими consumer'ами"},
+     {c:"prefetch = N (большое число)", e:"выше пропускная способность, но риск перегрузки одного consumer'а большим батчем сразу"}
+   ],
+   custom:"При нагрузочном тестировании <b>вашего</b> сервиса-потребителя попробуйте разные значения prefetch и понаблюдайте за балансом нагрузки между несколькими инстансами consumer'а — слишком большой prefetch может привести к тому, что один consumer получит 'весь' поток, а остальные будут простаивать.",
+   tip:"Если видите, что несколько запущенных инстансов одного consumer'а обрабатывают сообщения крайне неравномерно — одна из первых вещей для проверки — настройка prefetch."},
+
+  {cmd:"TTL", name:"Время жизни сообщения", cat:"Данные",
+   body:`x-message-ttl: <span class="num">60000</span> <span class="com">// 60 секунд</span>
+
+msg опубликован в 10:00:00
+не обработан к 10:01:00
+         ▼
+<span class="bad">удалено</span> (или ушло в Dead Letter, если настроен DLX)`,
+   what:"TTL (Time To Live) задаёт, сколько максимум сообщение может находиться в очереди, прежде чем будет автоматически удалено (или перенаправлено в dead letter, если тот настроен). Можно задать для конкретного сообщения или для всей очереди целиком.",
+   breakdown:[
+     {c:"x-message-ttl (на очереди)", e:"применяется ко ВСЕМ сообщениям этой очереди одинаково"},
+     {c:"expiration (на сообщении)", e:"индивидуальный TTL конкретного сообщения при публикации, переопределяет настройку очереди"}
+   ],
+   custom:"Если в <b>вашей</b> системе есть время-чувствительные события (например 'код подтверждения действителен 5 минут') — проверьте, настроен ли TTL на соответствующей очереди/сообщении, и что по истечении времени оно действительно не обрабатывается как актуальное (либо вообще удаляется/уходит в DLQ).",
+   tip:"Тестируйте граничные случаи: сообщение, обработанное за мгновение до истечения TTL, должно пройти нормально; сразу после истечения — не должно обработаться как валидное."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  let bodyHTML;
+  if(t.table){
+    const head = `<tr>${t.table[0].map(c=>`<th>${c}</th>`).join('')}</tr>`;
+    const rows = t.table.slice(1).map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('');
+    bodyHTML = `<div class="term-body"><table class="restbl"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
+  } else if(t.code){
+    bodyHTML = `<div class="term-body"><pre>${t.code}</pre>${t.out ? `<div class="com" style="margin-top:6px;">${t.out}</div>`:''}</div>`;
+  } else {
+    bodyHTML = `<div class="term-body"><pre>${t.body}</pre></div>`;
+  }
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">rabbitmq</div>
+      </div>
+      ${bodyHTML}
+    </div>
+
+    <div class="section-title">🐇 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Что это</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Ключевые понятия</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

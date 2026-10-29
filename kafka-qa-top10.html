@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Kafka для тестировщика</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:20px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.2px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  .prompt{color:var(--green);}
+  .cmdline{color:var(--text);}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:var(--purple);}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+  .jkey{color:#7fdbca;}
+  .topic{color:var(--cyan);font-weight:700;}
+  .bad{color:#ff5f5f;}
+  .ok{color:#2ecc71;}
+  .out{color:var(--muted);margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.5;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Kafka</span> для тестировщика</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Основы работы с Kafka для тестирования event-driven систем</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Topic & Partition", name:"Тема и партиции", cat:"Основы",
+   body:`<span class="topic">orders.created</span> (топик, 3 партиции)
+
+Partition 0: [msg1] [msg4] [msg7]
+Partition 1: [msg2] [msg5]
+Partition 2: [msg3] [msg6] [msg8]`,
+   what:"Topic — именованный поток сообщений (аналог 'темы' или 'очереди'), например orders.created. Внутри он физически разбит на несколько партиций — это и даёт Kafka параллелизм: разные партиции можно читать и писать одновременно.",
+   breakdown:[
+     {c:"Topic", e:"логическое имя потока событий, на которое подписываются потребители"},
+     {c:"Partition", e:"часть топика; сообщения внутри одной партиции всегда хранятся строго по порядку поступления"},
+     {c:"Replication factor", e:"сколько копий каждой партиции хранится на разных брокерах — для отказоустойчивости"}
+   ],
+   custom:"Узнайте у разработчиков список топиков <b>вашей</b> системы, связанных с тестируемой функциональностью (обычно именуются по смыслу события: orders.created, payment.failed) — это ваша карта того, что вообще происходит в системе асинхронно.",
+   tip:"Количество партиций топика нельзя безболезненно уменьшить после создания — это стоит иметь в виду при тестировании инфраструктурных изменений."},
+
+  {cmd:"Producer", name:"Публикация сообщения", cat:"Основы",
+   body:`<span class="fn">producer.send</span>(<span class="str">"orders.created"</span>, {
+  <span class="jkey">key</span>: <span class="str">"order-1051"</span>,
+  <span class="jkey">value</span>: { orderId: <span class="num">1051</span>, total: <span class="num">59.9</span> }
+});
+
+<span class="ok">✓</span> delivered to partition 1, offset 884`,
+   what:"Producer — компонент (сервис или тестовый скрипт), который публикует сообщения в топик. Для тестировщика умение самому отправить тестовое сообщение в Kafka — способ проверить реакцию потребляющего сервиса, не дожидаясь, пока событие сгенерирует реальная бизнес-логика.",
+   breakdown:[
+     {c:"key", e:"ключ сообщения — определяет, в какую партицию оно попадёт (см. карточку 'Message Key')"},
+     {c:"value", e:"полезная нагрузка — само сообщение, обычно JSON/Avro"},
+     {c:"offset в ответе", e:"позиция, под которой сообщение реально сохранилось в партиции"}
+   ],
+   custom:"Для тестирования сервиса-потребителя в <b>вашей</b> системе напишите небольшой тестовый продюсер (или используйте CLI, см. соответствующую карточку) — отправьте заведомо некорректное сообщение и проверьте, что потребитель обработает ошибку корректно, а не 'упадёт' молча.",
+   tip:"Можно тестировать не только 'счастливый путь' с валидным сообщением, но и граничные случаи: отсутствующее поле, неверный тип данных, пустое value — так находятся самые интересные баги обработки событий."},
+
+  {cmd:"Consumer & Group", name:"Потребитель и группа потребителей", cat:"Основы",
+   body:`group: <span class="topic">order-notification-service</span>
+
+Partition 0 → Consumer A
+Partition 1 → Consumer B
+Partition 2 → Consumer B
+
+<span class="com">// каждое сообщение обработает ровно один consumer в группе</span>`,
+   what:"Consumer читает сообщения из топика. Consumer Group — это логическое объединение нескольких экземпляров одного сервиса: Kafka сама распределяет партиции между ними так, чтобы каждое сообщение обработал только один из них — это и даёт горизонтальное масштабирование обработки.",
+   breakdown:[
+     {c:"Consumer", e:"один процесс/инстанс, читающий сообщения из одной или нескольких партиций"},
+     {c:"Consumer Group ID", e:"имя, объединяющее несколько экземпляров сервиса в одну логическую группу потребления"},
+     {c:"Rebalance", e:"переназначение партиций между участниками группы при добавлении/отключении consumer'а"}
+   ],
+   custom:"Если тестируете масштабирование <b>вашего</b> сервиса-потребителя — проверьте поведение при rebalance: запустите второй инстанс того же сервиса с тем же group ID и убедитесь, что сообщения не обрабатываются дважды и не теряются во время перераспределения партиций.",
+   tip:"Если два сервиса должны оба получать ВСЕ сообщения топика независимо друг от друга (не делить нагрузку) — им нужны РАЗНЫЕ group ID, иначе Kafka будет делить сообщения между ними, а не дублировать."},
+
+  {cmd:"Offset", name:"Позиция чтения", cat:"Основы",
+   body:`Partition 0: [0][1][2][3][4][5][6]
+                          ▲
+                    committed offset = 4
+                    (consumer прочитал 0-4,
+                     следующее сообщение — 5)`,
+   what:"Offset — порядковый номер сообщения внутри партиции. Consumer group запоминает ('коммитит'), до какого offset сообщения уже обработаны — это позволяет при перезапуске продолжить ровно с того места, где остановились, не читая всё заново и не пропуская новые.",
+   breakdown:[
+     {c:"Committed offset", e:"позиция, которую Kafka считает 'точно обработанной' для этой consumer group"},
+     {c:"earliest / latest", e:"стратегия старта для нового consumer'а без сохранённого offset — читать с самого начала или только новые сообщения"},
+     {c:"Reset offset", e:"ручной сброс позиции чтения назад — заставляет consumer перечитать уже обработанные сообщения"}
+   ],
+   custom:"Для проверки идемпотентности <b>вашего</b> сервиса-потребителя сбросьте offset его consumer group назад (kafka-consumer-groups --reset-offsets) и дайте ему повторно обработать уже виденные сообщения — он не должен дублировать результат (ещё один заказ, повторное письмо и т.п.).",
+   warn:"Сброс offset в проде заставит consumer заново обработать потенциально огромное количество старых сообщений — делайте это осознанно и только на тестовых окружениях, если не уверены в последствиях."},
+
+  {cmd:"Message Key & Order", name:"Ключ и гарантия порядка", cat:"Данные",
+   body:`key = <span class="str">"order-1051"</span> → всегда partition 1
+key = <span class="str">"order-1052"</span> → всегда partition 2
+
+<span class="ok">✓</span> все события ПО ОДНОМУ заказу
+   гарантированно в правильном порядке`,
+   what:"Kafka гарантирует порядок сообщений только внутри одной партиции, не во всём топике целиком. Ключ сообщения определяет, в какую партицию оно попадёт (хэш от ключа) — поэтому все сообщения с одним ключом всегда идут в одну партицию и обрабатываются строго по порядку.",
+   breakdown:[
+     {c:"key = null", e:"сообщения распределяются по партициям round-robin — порядок между ними НЕ гарантирован"},
+     {c:"key = order_id (например)", e:"все события одного заказа (создан/оплачен/отправлен) попадут в одну партицию в правильном порядке"}
+   ],
+   custom:"Если баг в <b>вашей</b> системе выглядит как 'событие \"оплачен\" обработалось раньше \"создан\"' — в первую очередь проверьте, используется ли вообще ключ при отправке, и один ли это ключ у связанных событий одной бизнес-сущности.",
+   tip:"Намеренно отправьте несколько событий без ключа (key=null) в многопартиционный топик в тесте — так можно продемонстрировать и зафиксировать в документации, что порядок между ними действительно не гарантирован."},
+
+  {cmd:"CLI tools", name:"Консольные consumer/producer", cat:"Инструменты",
+   line:"kafka-console-consumer --bootstrap-server localhost:9092 --topic orders.created --from-beginning",
+   out:"{\"orderId\":1050,\"total\":22.00}\n{\"orderId\":1051,\"total\":59.90}",
+   what:"Встроенные консольные утилиты Kafka позволяют вручную читать сообщения из топика или отправлять их в него — без написания кода. Для тестировщика это самый быстрый способ 'заглянуть' в топик и проверить, что там реально лежит, во время ручного тестирования.",
+   breakdown:[
+     {c:"kafka-console-consumer", e:"читает и выводит в консоль сообщения из указанного топика"},
+     {c:"--from-beginning", e:"читать с самого начала топика, а не только новые сообщения с этого момента"},
+     {c:"kafka-console-producer", e:"обратная утилита — позволяет вручную вводить и отправлять сообщения в топик из консоли"}
+   ],
+   custom:"Замените <b>localhost:9092</b> на адрес брокеров <b>вашего</b> тестового Kafka-кластера и <b>orders.created</b> — на реальное имя топика. Запустите consumer в отдельном окне перед выполнением UI-действия — так вы увидите сгенерированное событие вживую.",
+   tip:"Графические инструменты (Kafka UI, Offset Explorer/Kafka Tool, Conduktor) дают то же самое удобнее — с фильтрами, поиском по топикам и просмотром схем, стоит освоить один из них для повседневной работы."},
+
+  {cmd:"Schema Registry", name:"Валидация формата сообщений", cat:"Данные",
+   body:`Schema v2 для <span class="topic">orders.created</span>:
+
+{
+  orderId: int,
+  total: double,
+  <span class="ok">+ couponCode: string (optional)</span> <span class="com">// добавлено в v2</span>
+}
+
+<span class="ok">✓</span> BACKWARD совместимо с v1`,
+   what:"Schema Registry хранит версии структуры (схемы) сообщений, обычно в формате Avro или Protobuf, и проверяет совместимость новой схемы со старой при изменениях. Не даёт producer'у отправить сообщение, структурно нарушающее контракт, который ожидают существующие consumer'ы.",
+   breakdown:[
+     {c:"BACKWARD compatibility", e:"новые сообщения можно читать старым кодом consumer'а (например новое поле опционально)"},
+     {c:"FORWARD compatibility", e:"старые сообщения можно читать новым кодом consumer'а"},
+     {c:"Breaking change", e:"изменение, нарушающее совместимость — например удаление обязательного поля или смена его типа"}
+   ],
+   custom:"Когда разработчики <b>вашей</b> команды меняют структуру событий в Kafka — проверьте в Schema Registry UI, какой тип совместимости объявлен для топика, и действительно ли изменение ему соответствует, прежде чем оно уйдёт в прод и сломает другие сервисы-потребители.",
+   tip:"Если в системе нет Schema Registry и сообщения — просто 'сырой' JSON без схемы, это сам по себе архитектурный риск — стоит явно обсудить с командой, как вы тестируете совместимость форматов."},
+
+  {cmd:"Dead Letter Queue", name:"Очередь необработанных сообщений", cat:"Надёжность",
+   body:`<span class="topic">orders.created</span> → Consumer
+                        │
+                   <span class="bad">ошибка обработки</span>
+                   (после 3 retry)
+                        ▼
+              <span class="topic">orders.created.DLQ</span>`,
+   what:"Когда consumer не может обработать сообщение после нескольких попыток (например из-за некорректных данных), вместо бесконечных повторов или потери сообщения оно отправляется в отдельный топик-'отстойник' (DLQ) для последующего разбора вручную или автоматического переигрывания.",
+   breakdown:[
+     {c:"Retry policy", e:"сколько раз и с какой задержкой consumer повторяет попытку перед тем, как сдаться"},
+     {c:"Dead Letter Queue (DLQ)", e:"отдельный топик, куда попадают сообщения, которые не удалось обработать"},
+     {c:"Poison message", e:"сообщение, которое ВСЕГДА вызывает ошибку обработки (например битый JSON) — главный кандидат попасть в DLQ"}
+   ],
+   custom:"Протестируйте в <b>вашей</b> системе намеренно 'отравленное' сообщение (например с невалидным JSON или нарушающее схему) — убедитесь, что оно не роняет consumer в бесконечный цикл падений, а корректно попадает в DLQ после настроенного числа попыток.",
+   tip:"Проверьте также, что DLQ реально мониторится — сообщения, попавшие туда и забытые, означают незаметно 'потерянные' бизнес-события (неотправленные письма, недоставленные заказы)."},
+
+  {cmd:"Consumer Lag", name:"Отставание потребителя", cat:"Мониторинг",
+   body:`Topic: <span class="topic">orders.created</span>, Group: notification-service
+
+Partition  Latest offset  Committed  <span class="bad">Lag</span>
+0          1204           1198       <span class="bad">6</span>
+1          980            450        <span class="bad">530</span>  ← растёт!`,
+   what:"Lag — разница между последним сообщением, реально опубликованным в партиции, и тем, до какого места его дочитал consumer. Растущий lag означает, что consumer не успевает обрабатывать входящий поток — классический признак проблем производительности в асинхронной системе.",
+   breakdown:[
+     {c:"Latest offset", e:"позиция последнего опубликованного сообщения в партиции"},
+     {c:"Committed offset", e:"позиция, до которой дочитал и подтвердил consumer"},
+     {c:"Lag = Latest - Committed", e:"сколько сообщений ещё не обработано; стабильный рост — сигнал тревоги"}
+   ],
+   custom:"При нагрузочном тестировании <b>вашей</b> event-driven системы следите за lag сервиса-потребителя так же, как за CPU/памятью — растущий lag при постоянной входящей нагрузке означает, что consumer не справляется и очередь необработанных событий копится.",
+   tip:"kafka-consumer-groups --describe --group <имя> покажет lag по каждой партиции прямо из командной строки, без отдельного UI-инструмента."},
+
+  {cmd:"Testcontainers", name:"Kafka в автотестах", cat:"Автоматизация",
+   code:`<span class="kw">const</span> kafka = <span class="kw">new</span> <span class="fn">KafkaContainer</span>()
+  .<span class="fn">withExposedPorts</span>(<span class="num">9093</span>);
+<span class="kw">await</span> kafka.<span class="fn">start</span>();
+
+<span class="com">// тесты гоняются против реального,</span>
+<span class="com">// но временного инстанса Kafka</span>`,
+   what:"Testcontainers поднимает настоящий (не замоканный) инстанс Kafka в Docker-контейнере специально для одного тестового прогона — после завершения тестов контейнер уничтожается. Это даёт реалистичность реальной Kafka без необходимости в общем тестовом кластере, который могут занять/сломать другие тесты.",
+   breakdown:[
+     {c:"KafkaContainer", e:"готовый класс из библиотеки Testcontainers, поднимающий образ Kafka в Docker"},
+     {c:"withExposedPorts", e:"какой порт контейнера пробросить наружу, чтобы тестовый код мог к нему подключиться"},
+     {c:"start() / stop()", e:"жизненный цикл контейнера — обычно поднимается перед набором тестов и гасится после"}
+   ],
+   custom:"Для автотестов <b>вашего</b> сервиса-потребителя, где важна реальная семантика Kafka (партиционирование, rebalance, offset) — предпочитайте Testcontainers простым mock-библиотекам: баги, связанные с реальным поведением брокера, mock просто не воспроизведёт.",
+   tip:"Такой тест требует Docker в среде выполнения (включая CI) — убедитесь, что раннеры CI поддерживают Docker-in-Docker или аналог, прежде чем закладывать Testcontainers в пайплайн."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  let bodyHTML;
+  if(t.body){
+    bodyHTML = `<div class="term-body"><pre>${t.body}</pre></div>`;
+  } else if(t.code){
+    bodyHTML = `<div class="term-body"><pre>${t.code}</pre></div>`;
+  } else {
+    bodyHTML = `<div class="term-body">
+        <div><span class="prompt">~$</span> <span class="cmdline">${t.line}</span></div>
+        <div class="out">${t.out}</div>
+      </div>`;
+  }
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">kafka</div>
+      </div>
+      ${bodyHTML}
+    </div>
+
+    <div class="section-title">📨 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Что это</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Ключевые понятия</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

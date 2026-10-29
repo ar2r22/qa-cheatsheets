@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Linux для тестировщиков</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:21px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.3px;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 190px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:13px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:13px;overflow-x:auto;}
+  .prompt{color:var(--green);}
+  .cmdline{color:var(--text);}
+  .out{color:var(--muted);margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.5;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Linux</span> для тестировщиков</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Linux-команды, полезные в повседневной работе QA</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"grep", name:"Поиск в логах", cat:"Логи",
+   line:"grep -i \"error\" app.log",
+   out:"09:02:14 ERROR db connection timeout\n09:05:40 Error: payment failed",
+   what:"Ищет строки, содержащие заданный текст или паттерн, в файле или потоке. Для тестировщика это главный инструмент быстро найти нужную ошибку в многотысячестрочном логе, не открывая файл вручную.",
+   breakdown:[
+     {c:"-i", e:"игнорировать регистр (найдёт и ERROR, и error, и Error)"},
+     {c:"\"error\"", e:"искомая строка или регулярное выражение"},
+     {c:"app.log", e:"файл, в котором ищем"}
+   ],
+   custom:"Замените <b>app.log</b> на реальный путь к логу <b>вашего</b> приложения (часто это /var/log/..., либо лог контейнера). Добавьте <code>-n</code> чтобы видеть номер строки, <code>-C 3</code> — чтобы показать 3 строки контекста вокруг найденной.",
+   tip:"grep -r \"текст\" ./logs/ — рекурсивный поиск по всем файлам в папке, полезно когда логов несколько."},
+
+  {cmd:"tail -f", name:"Мониторинг лога в реальном времени", cat:"Логи",
+   line:"tail -f -n 50 app.log",
+   out:"09:10:01 INFO request received\n09:10:02 INFO response 200 OK\n[ожидание новых строк...]",
+   what:"Показывает последние строки файла и продолжает выводить новые строки по мере их появления — незаменимо, когда нужно смотреть лог 'вживую' во время ручного теста или прогона автотестов.",
+   breakdown:[
+     {c:"-f", e:"follow — не завершать работу, а ждать и выводить новые добавленные строки"},
+     {c:"-n 50", e:"сначала показать последние 50 строк, а не весь файл"}
+   ],
+   custom:"Запустите эту команду в отдельном терминале перед тем, как воспроизводить баг в <b>вашем</b> приложении — так вы увидите именно те строки лога, что появились в момент проблемы.",
+   tip:"Ctrl+C останавливает слежение за файлом, сам файл при этом не меняется."},
+
+  {cmd:"curl", name:"Запрос к API", cat:"Сеть/API",
+   line:"curl -i -X POST https://api.site/login -d '{\"user\":\"a@b.com\"}' -H \"Content-Type: application/json\"",
+   out:"HTTP/1.1 200 OK\n{\"token\":\"eyJhbGciOi...\"}",
+   what:"Отправляет HTTP-запрос прямо из терминала и показывает ответ — быстрый способ проверить API-эндпоинт без написания кода или открытия Postman.",
+   breakdown:[
+     {c:"-i", e:"показать заголовки ответа, а не только тело"},
+     {c:"-X POST", e:"HTTP-метод запроса (по умолчанию GET)"},
+     {c:"-d '{...}'", e:"тело запроса"},
+     {c:"-H \"...\"", e:"заголовок запроса, например тип контента"}
+   ],
+   custom:"Замените URL на адрес реального эндпоинта <b>вашего</b> API и тело запроса — на корректные для него данные. Для авторизованных запросов добавьте <code>-H \"Authorization: Bearer &lt;токен&gt;\"</code>.",
+   tip:"curl -o /dev/null -s -w \"%{http_code}\\n\" URL — выводит только HTTP-код ответа, удобно для быстрых smoke-проверок."},
+
+  {cmd:"ps / kill", name:"Процессы приложения", cat:"Процессы",
+   line:"ps aux | grep node",
+   out:"user   4821  0.3  1.2  node server.js\nuser   4822  0.1  0.4  node worker.js",
+   what:"ps показывает список запущенных процессов (что и под каким PID работает на машине), kill — отправляет процессу сигнал завершения. Полезно, когда нужно проверить, что тестируемый сервис запущен, или перезапустить 'зависший' процесс.",
+   breakdown:[
+     {c:"ps aux", e:"показать все процессы всех пользователей с подробностями (CPU, память)"},
+     {c:"| grep node", e:"отфильтровать вывод, оставив только строки с 'node'"},
+     {c:"kill -9 &lt;PID&gt;", e:"принудительно завершить процесс по его номеру (PID), взятому из вывода ps"}
+   ],
+   custom:"Замените <b>node</b> на имя процесса <b>вашего</b> приложения (java, python, nginx и т.д.) — так вы найдёте его PID и сможете убедиться, что сервис жив, перед стартом тестов.",
+   warn:"kill -9 завершает процесс немедленно без возможности корректно закрыть соединения/сохранить данные — используйте для диагностики, не как штатный способ остановки сервиса."},
+
+  {cmd:"netstat / ss", name:"Проверка портов", cat:"Сеть",
+   line:"ss -tulpn | grep 3000",
+   out:"tcp   LISTEN  0  128  0.0.0.0:3000  node",
+   what:"Показывает, какие сетевые порты сейчас заняты и каким процессом — помогает быстро проверить, реально ли слушает порт тестируемый сервис, или понять, почему 'порт уже занят'.",
+   breakdown:[
+     {c:"-t", e:"только TCP-соединения"},
+     {c:"-u", e:"включить UDP"},
+     {c:"-l", e:"только слушающие (LISTEN) сокеты"},
+     {c:"-p", e:"показать PID и имя процесса, занявшего порт"},
+     {c:"-n", e:"показывать числовые адреса/порты, не резолвить имена — быстрее"}
+   ],
+   custom:"Замените <b>3000</b> на порт <b>вашего</b> тестируемого сервиса. Если видите 'Address already in use' при старте приложения — эта команда покажет, какой процесс уже занял нужный порт.",
+   tip:"netstat — более старая команда с тем же смыслом; на современных дистрибутивах рекомендуется именно ss."},
+
+  {cmd:"df / du", name:"Место на диске", cat:"Система",
+   line:"df -h && du -sh ./test-artifacts",
+   out:"/dev/sda1   40G   32G   6G   85%   /\n2.3G  ./test-artifacts",
+   what:"df показывает свободное место на дисках/разделах, du — размер конкретной папки/файла. Пригождается, когда тесты падают из-за нехватки места (например при записи видео прогонов или больших логов).",
+   breakdown:[
+     {c:"df -h", e:"показать занятость дисков в человекочитаемом виде (ГБ вместо байт)"},
+     {c:"du -sh &lt;путь&gt;", e:"суммарный размер (-s) конкретной папки в человекочитаемом виде (-h)"}
+   ],
+   custom:"Проверяйте этой командой CI-раннер или тестовый сервер, если автотесты начали падать с непонятными ошибками записи файлов — часто причина именно в заполненном диске от старых артефактов/скриншотов.",
+   tip:"du -sh */ в папке с тестовыми артефактами быстро покажет, какая именно подпапка 'съедает' место."},
+
+  {cmd:"chmod / chown", name:"Права доступа", cat:"Файлы",
+   line:"chmod +x run_tests.sh",
+   out:"-rwxr-xr-x  run_tests.sh",
+   what:"chmod меняет права доступа к файлу (чтение/запись/выполнение), chown — меняет владельца файла. Частая причина 'Permission denied' при запуске скриптов автотестов на CI или чужой машине.",
+   breakdown:[
+     {c:"+x", e:"добавить право на выполнение файла как программы/скрипта"},
+     {c:"chmod 644 файл", e:"числовая форма: владелец читает/пишет, остальные только читают"},
+     {c:"chown user:group файл", e:"сменить владельца и группу файла"}
+   ],
+   custom:"Если скрипт запуска тестов <b>вашего</b> проекта выдаёт 'Permission denied: ./run_tests.sh' — выполните <code>chmod +x run_tests.sh</code> именно для этого файла.",
+   tip:"В Git права на выполнение файла сохраняются при коммите — если скрипт теряет +x после клонирования, проверьте .gitattributes/настройки репозитория."},
+
+  {cmd:"ssh / scp", name:"Доступ к серверу и копирование файлов", cat:"Удалённый доступ",
+   line:"ssh user@192.168.1.10\nscp report.html user@192.168.1.10:/var/www/reports/",
+   out:"Connected to 192.168.1.10\nreport.html  100%  340KB  2.1MB/s",
+   what:"ssh открывает защищённую консоль на удалённой машине (например тестовом стенде), scp копирует файлы между локальной машиной и сервером по тому же защищённому каналу.",
+   breakdown:[
+     {c:"ssh user@host", e:"подключение к удалённому серверу под указанным пользователем"},
+     {c:"scp файл user@host:путь", e:"копирование локального файла на сервер в указанную папку"},
+     {c:"scp user@host:путь .", e:"обратное направление — скачать файл с сервера к себе"}
+   ],
+   custom:"Замените <b>user@192.168.1.10</b> на реальные учётные данные и адрес <b>вашего</b> тестового стенда (их обычно выдаёт DevOps/лид). Так можно, например, скачать логи сервера после упавшего теста для анализа.",
+   tip:"Настройте SSH-ключи вместо пароля (ssh-copy-id) — ускоряет и упрощает регулярный доступ к стендам."},
+
+  {cmd:"cat / less / head", name:"Просмотр файлов", cat:"Файлы",
+   line:"less app.log",
+   out:"(интерактивный просмотр, стрелки — листать, / — искать, q — выйти)",
+   what:"Три способа посмотреть содержимое файла: cat выводит файл целиком сразу, head — только первые строки, less — открывает файл для постраничного/интерактивного просмотра, не загружая его целиком в терминал.",
+   breakdown:[
+     {c:"cat файл", e:"вывести весь файл целиком — подходит для маленьких файлов"},
+     {c:"head -n 20 файл", e:"показать первые 20 строк — быстро глянуть начало большого файла"},
+     {c:"less файл", e:"постраничный просмотр с поиском (/текст) — лучший выбор для больших логов"}
+   ],
+   custom:"Для больших лог-файлов <b>вашего</b> проекта всегда предпочитайте <code>less</code> вместо <code>cat</code> — cat на многомегабайтном файле 'завалит' терминал текстом.",
+   tip:"Внутри less нажмите Shift+F — перейдёт в режим, аналогичный tail -f (слежение за новыми строками)."},
+
+  {cmd:"top / htop", name:"Нагрузка на систему", cat:"Система",
+   line:"htop",
+   out:"CPU [||||||    42%]   MEM [||||||||  6.1G/16G]\nPID  USER  CMD\n4821 user  node server.js   38% CPU",
+   what:"Показывает в реальном времени, сколько CPU и памяти потребляют процессы — критично при нагрузочном/стресс-тестировании, чтобы увидеть, не 'захлёбывается' ли тестируемый сервис.",
+   breakdown:[
+     {c:"top", e:"предустановлен почти везде, базовый интерфейс мониторинга процессов"},
+     {c:"htop", e:"более удобная версия с цветным интерфейсом, сортировкой по клику и поиском процесса"}
+   ],
+   custom:"Запустите htop в отдельном окне терминала во время прогона нагрузочного теста <b>вашего</b> приложения — если CPU/память упираются в 100%, это объясняет деградацию времени ответа в результатах теста.",
+   tip:"В htop нажмите F6, чтобы отсортировать процессы по использованию CPU или памяти и сразу увидеть 'тяжёлый' процесс."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">user@qa-host: ~</div>
+      </div>
+      <div class="term-body">
+        <div><span class="prompt">~$</span> <span class="cmdline">${t.line.replace(/\n/g,'<br><span class="prompt">~$</span> ')}</span></div>
+        <div class="out">${t.out}</div>
+      </div>
+    </div>
+
+    <div class="section-title">🐧 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Для чего нужно</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор команды</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей работе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>

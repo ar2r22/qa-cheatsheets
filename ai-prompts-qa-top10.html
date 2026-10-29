@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 AI-промптов для QA</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:19px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.2px;
+    line-height:1.3;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 205px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:8px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+    justify-content:space-between;
+  }
+  .term-bar .label{display:flex;align-items:center;gap:6px;}
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .copy-btn{
+    background:#1b2330;color:var(--cyan);border:1px solid var(--panel-border);
+    border-radius:6px;padding:3px 9px;font-size:10.5px;cursor:pointer;
+    font-family:inherit;
+  }
+  .copy-btn:hover{border-color:var(--cyan);}
+  .copy-btn.copied{color:var(--green);border-color:var(--green);}
+  .prompt-body{padding:12px 12px 14px;font-size:12.5px;white-space:pre-wrap;line-height:1.55;color:var(--text);}
+  .ph{color:var(--orange);font-weight:700;}
+
+  .sub-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px 2px;border-top:1px solid var(--panel-border);}
+  .example-out{padding:8px 12px 12px;font-size:11.5px;color:var(--muted);white-space:pre-wrap;line-height:1.5;}
+  .ok{color:var(--green);}
+  .jkey{color:#7fdbca;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--orange);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>AI-промптов</span> для QA</h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Готовые шаблоны промптов для повседневных задач тестировщика</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Тест-кейсы", name:"Из требований/user story", cat:"Проектирование",
+   prompt:`Ты опытный QA-инженер. На основе требования ниже составь набор тест-кейсов.
+
+Требование:
+<span class="ph">[вставь текст user story или описание фичи]</span>
+
+Для каждого тест-кейса укажи: заголовок, предусловия, шаги, ожидаемый результат.
+Покрой: позитивные сценарии, негативные сценарии, граничные значения.
+Формат: таблица.`,
+   out:`| ID | Заголовок | Шаги | Ожидаемо |
+| TC-01 | Успешный вход | ... | Переход в кабинет |
+| TC-02 | Пустой пароль | ... | Ошибка валидации |
+| TC-03 | 101 символ в поле | ... | Поле обрезано/ошибка |`,
+   what:"Самый частый ежедневный запрос: превратить текст требования или тикета в структурированный набор тест-кейсов. AI хорошо находит очевидные позитивные сценарии и часть граничных случаев, но не заменяет ваше знание продукта — финальная проверка полноты всегда за вами.",
+   breakdown:[
+     {c:"роль (\"опытный QA-инженер\")", e:"задаёт контекст и стиль ответа — без неё модель чаще даёт более общий, менее профессиональный результат"},
+     {c:"явное перечисление покрытия", e:"позитив/негатив/границы — без этой подсказки модель часто ограничивается только 'счастливым путём'"},
+     {c:"формат ответа", e:"таблица — сразу удобно копировать в тест-кейс-менеджер (TestRail, Zephyr, Excel)"}
+   ],
+   custom:"Вставляйте реальный текст тикета/ак-критериев <b>вашего</b> проекта целиком, включая технические детали (ограничения полей, бизнес-правила) — чем конкретнее вход, тем меньше AI придумывает 'от себя'.",
+   tip:"Всегда дочитывайте и критически проверяйте результат — AI может предложить кейс, не применимый к вашей системе, или упустить специфичное бизнес-правило, которого нет в тексте требования."},
+
+  {cmd:"Граничные значения", name:"Edge cases для поля", cat:"Проектирование",
+   prompt:`Для поля ввода со следующими правилами придумай все граничные
+и нетипичные значения для тестирования:
+
+Поле: <span class="ph">[название поля, например "Сумма перевода"]</span>
+Правила: <span class="ph">[например: число, от 1 до 100000, до 2 знаков после запятой]</span>
+
+Раздели на: валидные граничные, невалидные граничные, нетипичный ввод
+(спецсимволы, unicode, SQL-инъекция, очень длинная строка и т.п.)`,
+   out:`Валидные границы: 1, 1.00, 99999.99, 100000
+Невалидные границы: 0, 0.999, 100000.01, -1
+Нетипичный ввод: "1e10", "100,00", "١٠٠", "' OR 1=1 --", 500-значное число`,
+   what:"Генерация граничных значений и 'странного' ввода — область, где AI особенно полезен: он помнит гораздо больше типовых edge-case паттернов (unicode, экспоненциальная запись чисел, SQL-инъекции в поле), чем человек держит в голове на лету.",
+   breakdown:[
+     {c:"точные правила поля", e:"диапазон, тип, формат — чем точнее описаны ограничения, тем точнее граничные значения"},
+     {c:"явные категории (валид/невалид/нетипичный)", e:"структурирует ответ и напоминает проверить не только числа, но и инъекции/спецсимволы"}
+   ],
+   custom:"Подставьте реальные правила валидации конкретного поля <b>вашего</b> приложения — если точных правил не знаете, сначала уточните их у разработчика, иначе AI будет гадать так же, как и вы.",
+   tip:"Используйте этот промпт вместе с техникой граничных значений из карточки 'Boundary Value Analysis' — AI здесь просто ускоряет перебор, сама техника остаётся классической."},
+
+  {cmd:"Баг-репорт", name:"Оформить из описания", cat:"Документирование",
+   prompt:`Оформи баг-репорт по стандартному шаблону на основе моего
+грубого описания ниже. Исправь формулировки на нейтральные и точные.
+
+Моё описание: <span class="ph">[опиши своими словами, что увидел]</span>
+Окружение: <span class="ph">[браузер/ОС/версия приложения]</span>
+
+Структура: Заголовок, Шаги воспроизведения, Фактический результат,
+Ожидаемый результат, Severity (с обоснованием).`,
+   out:`Заголовок: Кнопка "Оформить заказ" неактивна при заполненной корзине
+
+Шаги:
+1. Добавить товар в корзину
+2. Перейти в раздел "Корзина"
+3. Нажать "Оформить заказ"
+
+Фактический результат: кнопка не реагирует на клик
+Ожидаемый результат: переход на страницу оформления
+Severity: High — блокирует ключевой сценарий покупки`,
+   what:"Превращает сырые заметки ('кнопка не работает, я такой кликнул, а там ничего') в формальный баг-репорт с нейтральной формулировкой — экономит время на оформление и убирает эмоциональные/неточные выражения.",
+   breakdown:[
+     {c:"\"грубое описание\"", e:"можно писать как есть, даже сумбурно — задача AI именно причесать текст, а не придумать детали"},
+     {c:"\"исправь на нейтральные формулировки\"", e:"убирает случайные оценочные слова вроде 'ужасно тормозит' в пользу фактов"},
+     {c:"явный запрос Severity с обоснованием", e:"заставляет модель аргументировать оценку, а не просто проставить наугад"}
+   ],
+   custom:"Указывайте в описании только то, что РЕАЛЬНО наблюдали в <b>вашем</b> приложении — не просите AI 'додумать' фактический результат, он должен быть основан на том, что вы увидели, а не на предположении модели.",
+   warn:"Никогда не позволяйте AI самому придумывать шаги воспроизведения, которые вы не проверяли — он может сгенерировать правдоподобный, но неверный сценарий; шаги должны быть ровно теми, что вы выполнили."},
+
+  {cmd:"Объяснить ошибку", name:"Разбор стектрейса/лога", cat:"Диагностика",
+   prompt:`Объясни простыми словами, что означает эта ошибка и в каком
+модуле/слое системы она вероятнее всего возникла. Не предлагай
+исправление кода, я тестировщик — нужно понять причину для баг-репорта.
+
+Ошибка:
+<span class="ph">[вставь текст ошибки / стектрейс / строки лога]</span>`,
+   out:`TypeError: Cannot read properties of undefined (reading 'name')
+  at renderUser (app.js:142)
+
+Объяснение: код пытается прочитать поле .name у объекта user,
+но user в этот момент равен undefined — то есть данные
+пользователя ещё не пришли с сервера (или запрос упал)
+к моменту отрисовки компонента. Вероятно, проблема
+в порядке загрузки данных на фронтенде.`,
+   what:"Когда в Console DevTools или логе backend встречается непонятная ошибка — AI помогает быстро понять её человеческим языком, не дожидаясь разработчика. Полезно именно для понимания причины при составлении точного баг-репорта, а не для написания фикса.",
+   breakdown:[
+     {c:"\"не предлагай исправление кода\"", e:"держит ответ в зоне ответственности тестировщика — объяснение, а не решение, которое вы не должны предлагать вместо разработчика"},
+     {c:"\"для баг-репорта\"", e:"задаёт нужный уровень детализации — достаточно технический, но понятный без глубокого знания кодовой базы"}
+   ],
+   custom:"Копируйте ошибку из <b>вашего</b> приложения как есть, с полным стектрейсом, если он виден в DevTools/логах — чем больше контекста (номера строк, имена функций), тем точнее объяснение.",
+   tip:"Это отлично работает как промежуточный шаг: сначала поймите ошибку с помощью AI, потом уже решайте, достаточно ли этого для баг-репорта или нужно привлечь разработчика для более глубокого анализа."},
+
+  {cmd:"Тестовые данные", name:"Генерация JSON/CSV", cat:"Подготовка данных",
+   prompt:`Сгенерируй 10 тестовых записей в формате JSON по следующей схеме,
+включи разнообразные реалистичные значения, в том числе несколько
+граничных случаев (пустая строка, максимальная длина, спецсимволы).
+
+Схема:
+<span class="ph">[опиши поля и их типы/ограничения]</span>`,
+   out:`[
+  { <span class="jkey">"email"</span>: <span class="str">"ivan.petrov@mail.com"</span>, <span class="jkey">"age"</span>: <span class="num">34</span> },
+  { <span class="jkey">"email"</span>: <span class="str">"a@b.co"</span>, <span class="jkey">"age"</span>: <span class="num">18</span> },
+  { <span class="jkey">"email"</span>: <span class="str">""</span>, <span class="jkey">"age"</span>: <span class="num">0</span> },
+  ...
+]`,
+   what:"Быстрая генерация реалистичных наборов тестовых данных для наполнения БД, тестов API или проверки импорта — вместо ручного придумывания 10-20 строк с именами/email/датами.",
+   breakdown:[
+     {c:"точная схема полей", e:"типы, ограничения, формат — без этого AI угадывает структуру произвольно"},
+     {c:"явный запрос граничных случаев", e:"иначе получите только 'идеальные' данные без пустых строк и крайних значений"}
+   ],
+   custom:"Опишите реальную схему данных <b>вашего</b> проекта (можно взять прямо из API-документации или DDL таблицы) — тогда сгенерированные данные сразу подойдут для импорта через INSERT/API без ручной доработки формата.",
+   warn:"Не используйте сгенерированные AI 'реалистичные' email/имена как настоящие личные данные в системах с реальными уведомлениями (email, SMS) — используйте тестовые домены (@example.com) во избежание случайной отправки реальным людям."},
+
+  {cmd:"Автотест из шагов", name:"Ручные шаги → Playwright", cat:"Автоматизация",
+   prompt:`Преврати эти ручные шаги тест-кейса в автотест на Playwright + TypeScript.
+Используй getByRole/getByTestId для локаторов, добавь осмысленные
+assertions на каждый ключевой шаг.
+
+Шаги:
+<span class="ph">[вставь шаги тест-кейса построчно]</span>
+
+Селекторы/testid, которые уже известны:
+<span class="ph">[перечисли, если знаешь конкретные data-testid]</span>`,
+   out:`test('successful login', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByTestId('email').fill('user@mail.com');
+  await page.getByTestId('password').fill('pass123');
+  await page.getByRole('button', { name: 'Войти' }).click();
+  await expect(page).toHaveURL(/\\/dashboard/);
+});`,
+   what:"Ускоряет перевод уже написанного и проверенного вручную тест-кейса в код автотеста — особенно полезно для начинающих в автоматизации, когда структура Playwright ещё не 'в руках', но логика сценария уже понятна.",
+   breakdown:[
+     {c:"конкретные ручные шаги", e:"чем детальнее шаги (какая именно кнопка, какое поле), тем точнее получившийся код"},
+     {c:"известные testid", e:"если они у вас уже есть — AI использует их вместо угадывания селекторов 'из головы', что частая причина нерабочего сгенерированного кода"}
+   ],
+   custom:"Указывайте реальные data-testid/роли элементов <b>вашего</b> приложения, если они вам известны (посмотреть можно в Elements DevTools) — без них AI сгенерирует правдоподобный, но не рабочий код с придуманными селекторами.",
+   warn:"Всегда запускайте сгенерированный тест перед коммитом — AI может ошибиться с реальным поведением конкретного элемента (например async-загрузка), код нужно проверить, а не слепо доверять."},
+
+  {cmd:"Ревью тест-кейсов", name:"Найти пробелы в покрытии", cat:"Проверка качества",
+   prompt:`Выступи в роли строгого ревьюера тест-кейсов. Проанализируй
+набор ниже и укажи: какие сценарии пропущены, какие шаги
+неоднозначны, какие кейсы дублируют друг друга.
+
+Мои тест-кейсы:
+<span class="ph">[вставь список/таблицу тест-кейсов]</span>
+
+Контекст фичи (для понимания бизнес-логики):
+<span class="ph">[кратко опиши, что делает фича]</span>`,
+   out:`Пропущено:
+- Нет кейса на одновременное использование двух промокодов
+- Не покрыт сценарий истёкшей сессии при оформлении заказа
+
+Неоднозначно:
+- TC-07 "Проверить корзину" — не указано ЧТО именно проверять
+
+Дублирование:
+- TC-03 и TC-11 проверяют одно и то же разными словами`,
+   what:"AI как 'второй набор глаз' для вашего набора тест-кейсов перед тем, как показать его команде — находит очевидные пробелы в покрытии и нечёткие формулировки, которые сложно заметить в собственном тексте.",
+   breakdown:[
+     {c:"\"строгий ревьюер\"", e:"задаёт критический, а не одобрительный тон ответа — иначе модель склонна просто хвалить предложенное"},
+     {c:"контекст фичи отдельно от кейсов", e:"без понимания бизнес-логики AI не сможет заметить содержательные пробелы, только текстовые проблемы"}
+   ],
+   custom:"Описывайте контекст фичи <b>вашего</b> продукта так, будто объясняете новому коллеге с нуля — включая неочевидные бизнес-правила (например 'промокоды нельзя комбинировать'), иначе AI не узнает, что именно стоит проверить дополнительно.",
+   tip:"Это не замена ревью от коллеги-человека, особенно по доменной специфике продукта, но хороший бесплатный первый проход перед тем, как отправлять кейсы на ревью команде."},
+
+  {cmd:"Анализ логов", name:"Найти причину в большом логе", cat:"Диагностика",
+   prompt:`Вот фрагмент логов за период, когда произошла проблема.
+Найди подозрительные строки (ошибки, таймауты, аномалии)
+и предположи вероятную последовательность событий, приведшую к сбою.
+Если данных недостаточно для однозначного вывода — укажи, что именно
+нужно проверить дополнительно.
+
+Логи:
+<span class="ph">[вставь фрагмент лога, который получилось собрать]</span>`,
+   out:`Подозрительная последовательность:
+12:40:01 DB connection pool exhausted (warning)
+12:40:15 Payment request timeout
+12:40:16 Order status stuck in "processing"
+
+Вероятная причина: исчерпание пула соединений с БД
+привело к таймауту запроса к платёжному сервису.
+
+Недостаточно данных: не видно логов самого
+Payment Service — нужно запросить их отдельно.`,
+   what:"Когда лог большой и непонятно, с какой строки начинать искать — AI может быстро выделить подозрительные паттерны (ошибки, таймауты рядом по времени) и предложить гипотезу цепочки событий, которую вы уже целенаправленно проверяете дальше.",
+   breakdown:[
+     {c:"\"если данных недостаточно — укажи что проверить\"", e:"критически важная инструкция: без неё модель иногда 'додумывает' уверенный вывод там, где данных реально не хватает"},
+     {c:"фрагмент именно за нужный период", e:"не весь лог за день — иначе релевантный сигнал потеряется в шуме"}
+   ],
+   custom:"Вставляйте логи <b>вашего</b> приложения как есть, по возможности с нескольких связанных сервисов за один и тот же временной отрезок (см. карточку 'Correlation ID' из темы микросервисов) — это резко повышает качество гипотезы.",
+   warn:"Относитесь к выводу AI как к гипотезе для проверки, а не к готовому диагнозу для баг-репорта — подтверждайте её реальными данными (трейсом, повторным воспроизведением) перед тем как указывать как 'причину' в тикете."},
+
+  {cmd:"SQL по описанию", name:"Запрос для проверки в БД", cat:"Проверка данных",
+   prompt:`Напиши SQL-запрос для проверки следующего условия в базе данных.
+Структура таблиц (упрощённо):
+<span class="ph">[перечисли таблицы и ключевые поля, которые знаешь]</span>
+
+Что нужно проверить:
+<span class="ph">[опиши своими словами, что хочешь найти]</span>`,
+   out:`SELECT u.id, u.email, COUNT(o.id) AS orders_count
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.status = 'active'
+GROUP BY u.id, u.email
+HAVING COUNT(o.id) = 0;
+
+-- найдёт активных пользователей без единого заказа`,
+   what:"Когда нужно быстро проверить гипотезу в БД, но синтаксис конкретного JOIN/GROUP BY вспоминается не сразу — AI пишет запрос по словесному описанию условия, вам остаётся только выполнить его и проверить результат.",
+   breakdown:[
+     {c:"структура таблиц", e:"даже примерная (имена таблиц и полей) сильно повышает шанс получить рабочий запрос с первого раза"},
+     {c:"словесное условие, а не готовый SQL", e:"формулируйте на естественном языке то, что хотите узнать — синтаксис оставьте модели"}
+   ],
+   custom:"Указывайте реальные имена таблиц/столбцов <b>вашей</b> БД (DESCRIBE/\\d команда из карточки 'SELECT + WHERE') — без них AI угадает правдоподобные, но несуществующие в вашей схеме имена.",
+   tip:"Всегда сначала прогоняйте сгенерированный запрос как SELECT, даже если в итоге вам нужен UPDATE/DELETE — попросите AI сначала написать именно SELECT-версию для проверки, какие строки затронутся."},
+
+  {cmd:"API-тест по описанию", name:"curl / Postman-тест", cat:"API",
+   prompt:`Напиши запрос curl и соответствующий тест для Postman
+(вкладка Tests, pm.test) для проверки следующего эндпоинта.
+
+Эндпоинт: <span class="ph">[метод и путь, например POST /api/orders]</span>
+Ожидаемое поведение: <span class="ph">[опиши, что должно произойти]</span>
+Пример тела запроса (если нужно): <span class="ph">[JSON]</span>`,
+   out:`curl -X POST https://api.app.test/orders \\
+  -H "Content-Type: application/json" \\
+  -d '{"productId":105,"qty":2}'
+
+// Postman Tests:
+pm.test("Status 201", () => {
+  pm.response.to.have.status(201);
+});
+pm.test("Has order_id", () => {
+  pm.expect(pm.response.json().order_id).to.exist;
+});`,
+   what:"Быстро получить готовый curl для ручной проверки и сразу тест-скрипт для Postman по словесному описанию ожидаемого поведения эндпоинта — не нужно вспоминать точный синтаксис pm.test или флаги curl на лету.",
+   breakdown:[
+     {c:"метод и путь эндпоинта", e:"минимально необходимая информация, без неё AI не сможет написать корректный URL/метод"},
+     {c:"ожидаемое поведение словами", e:"модель сама превратит его в конкретные pm.test проверки — статус-код, наличие полей и т.п."}
+   ],
+   custom:"Подставляйте реальный базовый URL и структуру запроса <b>вашего</b> API — если есть точная OpenAPI/Swagger документация, вставьте релевантный фрагмент прямо в промпт для максимальной точности.",
+   tip:"Для защищённых эндпоинтов сразу уточните в промпте, что нужен заголовок Authorization с переменной {{token}} — иначе AI может забыть про авторизацию в сгенерированном примере."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function stripHtml(html){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="label"><div class="dot" style="background:#ff5f56"></div><div class="dot" style="background:#ffbd2e"></div><div class="dot" style="background:#27c93f"></div>&nbsp;prompt</div>
+        <button class="copy-btn" id="copyBtn">Copy</button>
+      </div>
+      <div class="prompt-body" id="promptText">${t.prompt}</div>
+      <div class="sub-label">Пример ответа AI</div>
+      <div class="example-out"><pre style="margin:0;white-space:pre-wrap;font-family:inherit;">${t.out}</pre></div>
+    </div>
+
+    <div class="section-title">🤖 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Когда использовать</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Разбор промпта</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как адаптировать под свой проект</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+
+  const copyBtn = document.getElementById('copyBtn');
+  copyBtn.onclick = () => {
+    const text = stripHtml(t.prompt);
+    navigator.clipboard.writeText(text).then(()=>{
+      copyBtn.textContent = 'Copied ✓';
+      copyBtn.classList.add('copied');
+      setTimeout(()=>{ copyBtn.textContent='Copy'; copyBtn.classList.remove('copied'); }, 1500);
+    }).catch(()=>{
+      copyBtn.textContent = 'Error';
+    });
+  };
+}
+
+render(0);
+</script>
+</body>
+</html>

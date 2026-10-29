@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Top 10 Тестирование микросервисов</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#11161f;
+    --panel-border:#1f2733;
+    --text:#e8edf2;
+    --muted:#8a96a3;
+    --green:#2ecc71;
+    --cyan:#27c3e0;
+    --orange:#f2a65a;
+    --blue:#2e9bff;
+    --red:#ff5f5f;
+    --purple:#c792ea;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'SF Mono','JetBrains Mono',Consolas,monospace;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
+  h1{
+    font-size:19px;
+    text-align:center;
+    margin:10px 0 18px;
+    letter-spacing:.2px;
+    line-height:1.3;
+  }
+  h1 span{color:var(--cyan);}
+  .layout{display:flex;gap:14px;align-items:flex-start;}
+  .list{
+    flex:0 0 205px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:80vh;
+    overflow-y:auto;
+    position:sticky;
+    top:10px;
+  }
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:9px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--cyan);}
+  .item.active{
+    background:var(--cyan);
+    color:#06161c;
+    border-color:var(--cyan);
+  }
+  .badge{
+    width:22px;height:22px;flex:0 0 22px;
+    border-radius:50%;
+    background:#1b2330;
+    color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+  }
+  .item.active .badge{background:#06161c;color:var(--cyan);}
+  .item .names{line-height:1.25;min-width:0;}
+  .item .cmd{font-weight:700;font-size:12px;}
+  .item .desc{font-size:10.5px;color:var(--muted);}
+  .item.active .desc{color:#0a2630;}
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#060a10;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--panel-border);
+    font-size:11px;color:var(--muted);
+  }
+  .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#444;}
+  .term-title{flex:1;text-align:center;}
+  .term-body{padding:12px 12px 14px;font-size:12.5px;overflow-x:auto;}
+  pre{margin:0;white-space:pre;font-family:inherit;}
+  .kw{color:var(--purple);}
+  .fn{color:#82aaff;}
+  .str{color:#c3e88d;}
+  .num{color:#f78c6c;}
+  .com{color:#5c6773;}
+  .jkey{color:#7fdbca;}
+  .svc{color:var(--cyan);font-weight:700;}
+  .arrow{color:var(--muted);}
+  .bad{color:#ff5f5f;}
+  .ok{color:#2ecc71;}
+
+  .flow{display:flex;flex-direction:column;gap:6px;font-size:12px;}
+  .flowstep{display:flex;align-items:center;gap:6px;}
+  .flowstep .n{color:var(--muted);width:16px;flex:0 0 16px;}
+
+  .section-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:700;color:var(--cyan);
+  }
+  .category{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:#102a1c;
+    color:var(--green);
+    border:1px solid #1c4a32;
+  }
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+
+  .block-title{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-top:4px;
+  }
+  .what{font-size:13px;color:var(--text);line-height:1.5;}
+
+  .breakdown{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:#0b0f16;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:10px;
+  }
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow code{
+    color:var(--cyan);
+    background:#0e1a22;
+    padding:1px 6px;
+    border-radius:5px;
+    flex:0 0 auto;
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .brow .expl{color:var(--muted);}
+
+  .custom{
+    font-size:12.5px;color:var(--text);
+    border-left:2px solid var(--blue);
+    padding-left:9px;
+    line-height:1.55;
+  }
+  .custom b{color:var(--blue);}
+  .custom code{color:var(--cyan);background:#0e1a22;padding:1px 5px;border-radius:4px;}
+
+  .tip{
+    font-size:11.5px;color:var(--orange);
+    border-left:2px solid var(--orange);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .warn{
+    font-size:11.5px;color:var(--red);
+    border-left:2px solid var(--red);
+    padding-left:8px;
+    line-height:1.5;
+  }
+  .footer{
+    text-align:center;color:var(--muted);
+    font-size:10.5px;margin-top:16px;
+  }
+  @media (max-width:560px){
+    .layout{flex-direction:column;}
+    .list{
+      flex-direction:column;
+      flex:none;
+      max-height:none;
+      overflow-y:visible;
+      position:static;
+      width:100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Top 10 <span>Тестирование микросервисов</span></h1>
+  <div class="layout">
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="footer">Памятка по тестированию распределённых систем</div>
+</div>
+
+<script>
+const tools = [
+  {cmd:"Contract Testing", name:"Контрактное тестирование", cat:"Интеграция",
+   body:`<span class="svc">Order Service</span> <span class="arrow">ожидает от</span> <span class="svc">Payment Service</span>:
+
+{
+  <span class="jkey">"status"</span>: <span class="str">"approved"</span> | <span class="str">"declined"</span>,
+  <span class="jkey">"transaction_id"</span>: <span class="str">"string"</span>
+}
+
+<span class="ok">✓</span> Pact-файл проверен с обеих сторон независимо`,
+   what:"Проверка, что API-контракт между двумя сервисами (формат запроса/ответа) соблюдается обеими сторонами, без необходимости поднимать их вместе. Потребитель (consumer) описывает, чего он ожидает от провайдера, провайдер прогоняет это описание против своего реального API.",
+   breakdown:[
+     {c:"Consumer-driven contract", e:"команда, использующая сервис, описывает свои ожидания от его API — не наоборот"},
+     {c:"Pact / Pact Broker", e:"популярный инструмент для хранения и проверки контрактов между командами"},
+     {c:"Независимая проверка", e:"каждая сторона тестирует свой код против контракта в своём CI, не дожидаясь другой команды"}
+   ],
+   custom:"Для <b>вашей</b> системы начните с самых хрупких интеграций — где API двух сервисов меняется часто, а end-to-end тест ловит поломку слишком поздно (уже в staging).",
+   tip:"Contract testing не заменяет интеграционные тесты полностью, но ловит 80% багов 'забыли предупредить другую команду об изменении API' намного раньше и дешевле."},
+
+  {cmd:"Service Virtualization", name:"Виртуализация зависимостей", cat:"Изоляция",
+   body:`<span class="svc">Order Service</span> <span class="arrow">(тестируем)</span>
+      │
+      ▼
+<span class="com">[WireMock stub]</span> ← вместо реального
+<span class="svc">Payment Service</span>
+
+<span class="fn">stub</span>(POST /pay) → <span class="num">200</span> { status: <span class="str">"approved"</span> }`,
+   what:"Подмена реального зависимого сервиса заглушкой (stub/mock), которая отвечает заранее заданными данными. Позволяет тестировать один сервис изолированно, не завися от доступности, стабильности или состояния данных других сервисов.",
+   breakdown:[
+     {c:"Stub / Mock server", e:"инструменты вроде WireMock, MockServer, Mountebank поднимают поддельный HTTP-сервер с заданными ответами"},
+     {c:"Записанные ответы (recorded)", e:"некоторые инструменты умеют 'записать' реальные ответы сервиса один раз и переиспользовать как заглушку"}
+   ],
+   custom:"Выберите в <b>вашей</b> архитектуре сервис, который чаще всего недоступен/нестабилен в тестовом окружении (например внешний платёжный шлюз) — замените его заглушкой в тестах, которые не проверяют именно эту интеграцию.",
+   tip:"Используйте virtualization для unit/component-тестов, но не забывайте про отдельные настоящие интеграционные тесты против реального сервиса хотя бы на staging — заглушка может 'соврать', если реальный API изменился."},
+
+  {cmd:"Health Checks", name:"Проверка состояния сервиса", cat:"Мониторинг",
+   body:`<span class="fn">GET</span> /health
+
+<span class="num">200</span> {
+  <span class="jkey">"status"</span>: <span class="str">"UP"</span>,
+  <span class="jkey">"db"</span>: <span class="str">"UP"</span>,
+  <span class="jkey">"cache"</span>: <span class="str">"DEGRADED"</span>
+}`,
+   what:"Эндпоинт, который сервис предоставляет специально для проверки своей работоспособности и работоспособности его прямых зависимостей (БД, кэш, очередь). Используется системами оркестрации (Kubernetes) и мониторингом, чтобы понять, готов ли сервис принимать трафик.",
+   breakdown:[
+     {c:"/health или /actuator/health", e:"общий статус сервиса и его критичных зависимостей"},
+     {c:"/ready (readiness probe)", e:"готов ли сервис принимать новый трафик прямо сейчас (например после старта)"},
+     {c:"/live (liveness probe)", e:"жив ли процесс вообще — если нет, Kubernetes его перезапустит"}
+   ],
+   custom:"Перед тем как гонять тесты против <b>вашего</b> сервиса в CI — добавьте шаг, который дожидается ответа 200 от /health, вместо фиксированного sleep на N секунд после деплоя.",
+   tip:"Если health check сервиса всегда отвечает 'UP', даже когда БД реально недоступна — это сам по себе баг, из-за которого проблема обнаружится только по реальным ошибкам пользователей."},
+
+  {cmd:"Distributed Tracing", name:"Трассировка запроса", cat:"Диагностика",
+   body:`trace_id: <span class="str">4f7a-91c2</span>
+
+<span class="svc">API Gateway</span>     12ms
+  └─ <span class="svc">Order Service</span>  45ms
+       └─ <span class="svc">Payment Service</span> 230ms  <span class="bad">← медленно</span>
+       └─ <span class="svc">Inventory Service</span> 18ms`,
+   what:"Единый идентификатор (trace ID) прикрепляется к запросу на входе в систему и передаётся дальше через все сервисы, которые его обрабатывают. Инструменты вроде Jaeger/Zipkin визуализируют весь путь запроса и время, потраченное в каждом сервисе — без этого найти 'кто виноват' в распределённой системе почти невозможно.",
+   breakdown:[
+     {c:"trace_id", e:"уникальный ID всего запроса целиком, одинаковый во всех сервисах, через которые он прошёл"},
+     {c:"span", e:"один 'отрезок' работы внутри trace — например время, потраченное конкретным сервисом"},
+     {c:"Jaeger / Zipkin", e:"популярные инструменты для сбора и визуализации трейсов"}
+   ],
+   custom:"Когда баг в <b>вашей</b> системе проявляется как 'иногда долго грузится' без понятной причины — найдите trace_id этого запроса (часто есть в заголовке ответа или логах) и посмотрите, какой именно сервис в цепочке 'тормозит'.",
+   tip:"Просите trace_id у разработчиков при заведении бага про медленный/некорректный ответ — это резко ускоряет диагностику по сравнению с 'у меня просто долго грузилось'."},
+
+  {cmd:"Chaos Engineering", name:"Тестирование отказоустойчивости", cat:"Устойчивость",
+   body:`<span class="com">Эксперимент: отключить Payment Service на 30 сек</span>
+
+<span class="fn">Гипотеза:</span> Order Service покажет
+пользователю понятную ошибку и не потеряет заказ
+
+<span class="ok">✓</span> подтверждено   <span class="bad">✗</span> заказ завис в processing`,
+   what:"Намеренное внесение сбоев в систему (отключение сервиса, задержки сети, нехватка памяти) в контролируемых условиях — чтобы проверить, насколько остальная система устойчива к отказу одной из частей, вместо того чтобы узнать об этом во время реального инцидента.",
+   breakdown:[
+     {c:"Гипотеза", e:"чёткое ожидание: 'при отказе сервиса X, система должна вести себя так-то', а не просто 'сломаем и посмотрим'"},
+     {c:"Blast radius", e:"ограничение эксперимента — например только 5% трафика или только staging, чтобы не положить всё"},
+     {c:"Chaos Monkey / Gremlin / Litmus", e:"инструменты для контролируемого внесения сбоев"}
+   ],
+   custom:"Начните с малого в <b>вашей</b> системе: на staging отключите на короткое время некритичный зависимый сервис и проверьте — показывает ли основной сервис понятную ошибку пользователю, или просто 'зависает' без обратной связи.",
+   warn:"Никогда не начинайте практику хаос-инжиниринга сразу на продакшене без согласования с командой и чёткого плана отката — начинайте со staging и постепенно расширяйте охват."},
+
+  {cmd:"Idempotency", name:"Идемпотентность операций", cat:"Надёжность",
+   body:`<span class="fn">POST</span> /payments
+Idempotency-Key: <span class="str">a93e7c1-key</span>
+
+<span class="com">1-й запрос:</span>  <span class="num">201</span> Created, списано $50
+<span class="com">2-й (retry, та же key):</span> <span class="num">200</span> OK, НЕ списано повторно`,
+   what:"Проверка, что повторная отправка одного и того же запроса (например из-за обрыва сети и retry со стороны клиента) не приводит к дублированию действия — классический риск в микросервисах, где сеть между сервисами ненадёжна по своей природе.",
+   breakdown:[
+     {c:"Idempotency-Key", e:"уникальный ключ, который клиент отправляет с запросом — сервис запоминает его и не повторяет уже выполненное действие"},
+     {c:"Безопасные повторы (retry)", e:"механизм на стороне клиента, который автоматически повторяет запрос при сетевой ошибке"}
+   ],
+   custom:"Найдите в <b>вашей</b> системе операции, где дублирование особенно опасно (списание денег, отправка email, создание заказа) — явно протестируйте сценарий 'отправить один и тот же запрос дважды подряд' и убедитесь, что результат не удвоился.",
+   tip:"Этот тест легко автоматизировать: просто вызвать один и тот же POST-запрос с одинаковым idempotency-ключом два раза подряд и сравнить состояние данных до/после."},
+
+  {cmd:"Eventual Consistency", name:"Отложенная согласованность", cat:"Данные",
+   body:`<span class="svc">Order Service</span> создал заказ → <span class="num">200</span> мгновенно
+
+<span class="com">... событие летит через очередь ...</span>
+
+<span class="svc">Inventory Service</span> уменьшит остаток
+<span class="fn">через</span> ~<span class="num">300</span>мс (асинхронно)
+
+<span class="bad">✗</span> если проверить остаток сразу — он ещё старый`,
+   what:"Во многих микросервисных системах данные синхронизируются между сервисами не мгновенно, а через события/очереди — какое-то время разные сервисы могут 'видеть' слегка разное состояние. Тест должен это учитывать, а не ожидать мгновенной синхронности как в монолите с одной БД.",
+   breakdown:[
+     {c:"Event-driven синхронизация", e:"сервис публикует событие ('заказ создан'), другие сервисы реагируют на него асинхронно"},
+     {c:"Race condition в тестах", e:"частая ошибка — проверка состояния сразу после действия, пока событие ещё не долетело"}
+   ],
+   custom:"Если тест в <b>вашей</b> системе иногда 'флакует' (падает не стабильно) сразу после создания/изменения данных — проверьте, не является ли причиной именно асинхронное распространение события; добавьте ожидание (polling) конечного состояния вместо фиксированной паузы или мгновенной проверки.",
+   tip:"Вместо sleep(1000) используйте polling с таймаутом: периодически перепроверяйте состояние, пока оно не станет ожидаемым или не истечёт разумный лимит ожидания."},
+
+  {cmd:"Circuit Breaker", name:"Проверка отказоустойчивых паттернов", cat:"Устойчивость",
+   body:`Payment Service отвечает ошибками 5 раз подряд
+
+<span class="fn">Circuit Breaker:</span> CLOSED → <span class="bad">OPEN</span>
+
+<span class="com">Следующие запросы (30 сек):</span>
+мгновенный fallback-ответ,
+без реального вызова упавшего сервиса`,
+   what:"Паттерн, при котором сервис-потребитель перестаёт вызывать уже явно 'сломанный' зависимый сервис на какое-то время (вместо того чтобы продолжать безуспешные попытки и копить таймауты), отдавая вместо этого быстрый fallback-ответ. Проверка, что этот механизм реально срабатывает — важная часть тестирования устойчивости.",
+   breakdown:[
+     {c:"CLOSED", e:"нормальное состояние — запросы к зависимому сервису идут как обычно"},
+     {c:"OPEN", e:"сервис признан 'сломанным' — запросы к нему блокируются, сразу возвращается fallback"},
+     {c:"HALF-OPEN", e:"пробный период — пропускается несколько запросов, чтобы проверить, восстановился ли сервис"}
+   ],
+   custom:"Протестируйте в <b>вашей</b> системе: при имитации постоянных ошибок зависимого сервиса действительно ли открывается circuit breaker (резко падает время ответа вместо накопления таймаутов), и действительно ли он позже 'пробует' снова и закрывается при восстановлении сервиса.",
+   tip:"Resilience4j и Hystrix — популярные библиотеки, реализующие этот паттерн в Java-микросервисах; стоит спросить у разработчиков, какая используется в вашей системе, чтобы знать её таймауты и пороги."},
+
+  {cmd:"Test Pyramid", name:"Пирамида тестирования для микросервисов", cat:"Стратегия",
+   body:`         ▲
+        / \\    E2E (мало, медленно,
+       / E2E\\   весь путь через сервисы)
+      /-------\\
+     /Component\\  Контрактные/компонентные
+    /-----------\\ (сервис + его заглушки)
+   /    Unit     \\ Unit-тесты (много, быстро,
+  /---------------\\ внутри одного сервиса)`,
+   what:"В микросервисной архитектуре 'широкие' end-to-end тесты через весь ландшафт сервисов становятся медленными, хрупкими и дорогими в поддержке. Пирамида напоминает: большинство проверок должно быть на нижних, быстрых уровнях, а E2E — лишь тонкий верхний слой для критичных сквозных сценариев.",
+   breakdown:[
+     {c:"Unit", e:"тестируют логику одного сервиса изолированно, без сети — самые быстрые и дешёвые"},
+     {c:"Component / Contract", e:"тестируют сервис целиком, но зависимости — через заглушки или контракты, не поднимая всю систему"},
+     {c:"E2E", e:"реальный сквозной сценарий через несколько настоящих сервисов — медленно, хрупко, но ловит то, что остальные уровни не видят"}
+   ],
+   custom:"Если в <b>вашем</b> проекте регрессия гоняется по 40 минут и часто 'флакует' — посчитайте соотношение E2E к unit/component тестам; скорее всего пирамида перевёрнута, и часть E2E стоит заменить более дешёвыми контрактными тестами.",
+   tip:"E2E-тесты держите для действительно критичных сквозных путей (оформление заказа целиком), а не для проверки каждой мелкой бизнес-правки — для них достаточно уровня ниже."},
+
+  {cmd:"Correlation ID", name:"Сквозной ID в логах", cat:"Диагностика",
+   body:`<span class="com">Логи трёх разных сервисов, один и тот же запрос:</span>
+
+[API-GW]      x-correlation-id=<span class="str">7f3a21</span> request in
+[ORDER-SVC]   x-correlation-id=<span class="str">7f3a21</span> order created
+[PAYMENT-SVC] x-correlation-id=<span class="str">7f3a21</span> <span class="bad">payment failed</span>`,
+   what:"Похоже на distributed tracing, но проще: один ID передаётся через заголовок запроса во все сервисы и попадает в их логи. Позволяет, зная один ID, собрать все связанные строки логов из разных сервисов и разных систем логирования в единую картину происходящего.",
+   breakdown:[
+     {c:"x-correlation-id / x-request-id", e:"заголовок, генерируемый на входе в систему (обычно на API Gateway) и передаваемый дальше"},
+     {c:"Централизованный лог-агрегатор", e:"ELK/Grafana Loki и подобные — позволяют искать по этому ID сразу по всем сервисам"}
+   ],
+   custom:"При воспроизведении бага в <b>вашей</b> системе найдите correlation ID этого запроса (обычно в заголовках ответа через DevTools) и используйте его как ключевой поисковый запрос в системе логирования — вместо попыток найти нужные строки по времени вручную в каждом сервисе отдельно.",
+   tip:"Если запрос прошёл через несколько сервисов, но у всех логов разные/отсутствующие correlation ID — это само по себе баг инфраструктуры логирования, который стоит завести отдельно, он мешает диагностировать всё остальное."}
+];
+
+const list = document.getElementById('list');
+const panel = document.getElementById('panel');
+
+function render(i){
+  list.innerHTML = tools.map((t,idx)=>`
+    <div class="item ${idx===i?'active':''}" data-i="${idx}">
+      <div class="badge">${idx+1}</div>
+      <div class="names">
+        <div class="cmd">${t.cmd}</div>
+        <div class="desc">${t.name}</div>
+      </div>
+    </div>`).join('');
+
+  const t = tools[i];
+  const breakdownHTML = t.breakdown.map(b=>`
+    <div class="brow"><code>${b.c}</code><span class="expl">${b.e}</span></div>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot" style="background:#ff5f56"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#27c93f"></div>
+        <div class="term-title">scenario</div>
+      </div>
+      <div class="term-body"><pre>${t.body}</pre></div>
+    </div>
+
+    <div class="section-title">🧩 ${t.cmd}</div>
+    <div class="meta"><span class="category">${t.cat}</span></div>
+
+    <div class="block-title">Что это</div>
+    <div class="what">${t.what}</div>
+
+    <div class="block-title">Ключевые понятия</div>
+    <div class="breakdown">${breakdownHTML}</div>
+
+    <div class="block-title">Как применить в своей системе</div>
+    <div class="custom">${t.custom}</div>
+
+    ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
+    ${t.warn ? `<div class="warn">⚠️ ${t.warn}</div>` : ''}
+  `;
+
+  list.querySelectorAll('.item').forEach(el=>{
+    el.onclick = ()=>render(parseInt(el.dataset.i));
+  });
+}
+
+render(0);
+</script>
+</body>
+</html>
