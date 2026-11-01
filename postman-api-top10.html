@@ -32,15 +32,23 @@
   }
   .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:21px;
     text-align:center;
@@ -172,7 +180,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -184,7 +192,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -225,24 +232,40 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
   <h1>Top 10 <span>API</span> + Postman</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Тестирование API через Postman · для начинающих QA</div>
+  <div class="footer" id="pageFooter">Тестирование API через Postman · для начинающих QA</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const labels = {
+  ru: { back:"← На главную", footer:"Тестирование API через Postman · для начинающих QA",
+        what:"Для чего нужно", breakdown:"Разбор", custom:"Как применить в своём проекте",
+        headers:"Headers", body:"Body", response:"Response" },
+  en: { back:"← Home", footer:"API testing with Postman · for beginner QA engineers",
+        what:"When to use it", breakdown:"Breakdown", custom:"How to apply it in your project",
+        headers:"Headers", body:"Body", response:"Response" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Requests", name:"GET / POST / PUT / DELETE", cat:"Основы", method:"GET",
    url:"{{base_url}}/api/users/42",
    body:null,
@@ -414,12 +437,192 @@ const tools = [
    ],
    custom:"Если backend <b>вашего</b> эндпоинта ещё не реализован — договоритесь с разработчиком о структуре ответа (контракте), сохраните её как Example в Postman и создайте по коллекции Mock Server — можно тестировать уже сейчас.",
    tip:"Это также хороший способ зафиксировать ожидаемый контракт API до начала разработки — своего рода живая документация."}
-];
+],
+en: [
+  {cmd:"Requests", name:"GET / POST / PUT / DELETE", cat:"Basics", method:"GET",
+   url:"{{base_url}}/api/users/42",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`{
+  <span class="jkey">"id"</span>: <span class="num">42</span>,
+  <span class="jkey">"email"</span>: <span class="str">"a@mail.com"</span>,
+  <span class="jkey">"status"</span>: <span class="str">"active"</span>
+}`,
+   what:"The HTTP method defines which action you're asking the server to perform. GET — fetch data, POST — create, PUT/PATCH — update, DELETE — remove. In Postman the method is picked from a dropdown to the left of the address bar.",
+   breakdown:[
+     {c:"GET", e:"requests data without changing server state — safe to call repeatedly"},
+     {c:"POST", e:"creates a new entity; the request body usually carries the data to create it"},
+     {c:"PUT / PATCH", e:"update an existing entity (PUT — the whole thing, PATCH — partially)"},
+     {c:"DELETE", e:"removes an entity by its identifier"}
+   ],
+   custom:"Swap the URL for a real endpoint of <b>your</b> API (usually listed in the project's Swagger/OpenAPI docs or known by the backend devs).",
+   tip:"Start testing a new endpoint with GET — it's safe and immediately shows you the shape of real data."},
+
+  {cmd:"Environments", name:"Environment Variables", cat:"Organization", method:"GET",
+   url:"{{base_url}}/api/health",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`{ <span class="jkey">"status"</span>: <span class="str">"ok"</span> }`,
+   what:"An Environment stores a set of variables (base_url, token, etc.) you can switch with one click — e.g. between Local, Staging and Production — without editing requests by hand.",
+   breakdown:[
+     {c:"{{base_url}}", e:"the syntax for substituting an environment variable into a URL/header/body"},
+     {c:"Environment", e:"a named set of key-value pairs (base_url=https://staging.site)"},
+     {c:"Globals", e:"variables available across every environment and collection at once"}
+   ],
+   custom:"Create a Postman environment for <b>your</b> project with a <code>base_url</code> variable (e.g. https://staging.yourapp.com) — every request in the collection instantly becomes portable between environments.",
+   tip:"Never hardcode staging/prod directly into a URL — one typo while copying a collection can accidentally send a request to the wrong place."},
+
+  {cmd:"Headers & Auth", name:"Headers & Authorization", cat:"Basics", method:"GET",
+   url:"{{base_url}}/api/profile",
+   headers:[["Authorization","Bearer {{token}}"],["Content-Type","application/json"]],
+   body:null,
+   status:"401 Unauthorized", statusClass:"st-4xx",
+   resp:`{ <span class="jkey">"error"</span>: <span class="str">"invalid or expired token"</span> }`,
+   what:"Headers carry request metadata — most often the content type and auth data. Without a valid Authorization header, most protected endpoints return 401.",
+   breakdown:[
+     {c:"Authorization: Bearer <token>", e:"the access token confirming the user's identity"},
+     {c:"Content-Type: application/json", e:"tells the server the request body is JSON"},
+     {c:"the Authorization tab in Postman", e:"a convenient UI for Bearer/Basic/API Key — fills in the header for you"}
+   ],
+   custom:"Get a valid token for <b>your</b> API (usually via a login request) and save it into the <code>{{token}}</code> environment variable — every protected request in the collection will then use it automatically.",
+   tip:"401 Unauthorized means an identity problem (invalid token); 403 Forbidden means the identity is known but lacks permission. These are different bugs."},
+
+  {cmd:"Request Body", name:"Request Body (JSON)", cat:"Basics", method:"POST",
+   url:"{{base_url}}/api/orders",
+   body:`{
+  <span class="jkey">"product_id"</span>: <span class="num">105</span>,
+  <span class="jkey">"quantity"</span>: <span class="num">2</span>,
+  <span class="jkey">"coupon"</span>: <span class="str">"SALE10"</span>
+}`,
+   status:"201 Created", statusClass:"st-2xx",
+   resp:`{
+  <span class="jkey">"order_id"</span>: <span class="num">1051</span>,
+  <span class="jkey">"total"</span>: <span class="num">18.90</span>
+}`,
+   what:"The request body carries the data the server should process (e.g. parameters for a new order). In Postman it's set in the Body tab, usually in raw → JSON mode.",
+   breakdown:[
+     {c:"Body → raw → JSON", e:"Postman's body-input mode, with syntax highlighting and auto-formatting"},
+     {c:"201 Created", e:"the standard status code for a successfully created resource (as opposed to 200 OK)"}
+   ],
+   custom:"Build a JSON body with the real fields <b>your</b> API endpoint expects — usually described in the docs, or you can spot them by intercepting the UI's request in DevTools.",
+   tip:"Test not just the 'happy path' with valid data, but edge cases too: a missing required field, the wrong type, a negative quantity."},
+
+  {cmd:"Tests (pm.test)", name:"Automated Checks", cat:"Automation", method:"GET",
+   url:"{{base_url}}/api/users/42",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`<span class="com">// Tests tab:</span>
+<span class="fn">pm.test</span>(<span class="str">"Status is 200"</span>, () => {
+  <span class="fn">pm.response</span>.<span class="fn">to</span>.<span class="fn">have</span>.<span class="fn">status</span>(<span class="num">200</span>);
+});
+<span class="fn">pm.test</span>(<span class="str">"Has email field"</span>, () => {
+  <span class="kw">const</span> json = <span class="fn">pm.response</span>.<span class="fn">json</span>();
+  <span class="fn">pm.expect</span>(json.email).<span class="fn">to</span>.<span class="fn">exist</span>;
+});`,
+   what:"A JS script in the Tests tab that runs after the response arrives and checks it automatically (status code, JSON structure, field values, response time). Results show up as green/red checkmarks.",
+   breakdown:[
+     {c:"pm.test(name, fn)", e:"one named assertion, shown as its own line in the results"},
+     {c:"pm.response.to.have.status(200)", e:"checks the HTTP response code"},
+     {c:"pm.response.json()", e:"parses the response body as JSON for further checks"},
+     {c:"pm.expect(...).to.exist", e:"Chai assertion-library syntax — checks that a value is defined"}
+   ],
+   custom:"Add checks like these as soon as you create a request for <b>your</b> endpoint — at minimum the status code and the presence of key response fields. This turns a manual Postman request into an automated test.",
+   tip:"pm.response.responseTime — checks response time, useful for catching performance regressions: pm.expect(pm.response.responseTime).to.be.below(500)."},
+
+  {cmd:"Pre-request Script", name:"Pre-request Script", cat:"Automation", method:"POST",
+   url:"{{base_url}}/api/orders",
+   body:`{ <span class="jkey">"idempotency_key"</span>: <span class="str">"{{$guid}}"</span> }`,
+   status:"201 Created", statusClass:"st-2xx",
+   resp:`<span class="com">// Pre-request Script tab:</span>
+<span class="fn">pm.environment</span>.<span class="fn">set</span>(
+  <span class="str">"timestamp"</span>, Date.now()
+);`,
+   what:"JS code that runs BEFORE the request is sent — used to dynamically prepare data: generate a timestamp, a random ID, or sign the request before it goes out.",
+   breakdown:[
+     {c:"pm.environment.set(key, value)", e:"write a value into an environment variable right before sending"},
+     {c:"{{$guid}}, {{$timestamp}}", e:"Postman's built-in dynamic variables — no script required"}
+   ],
+   custom:"Use a Pre-request Script when <b>your</b> API needs values that can't be hardcoded (a timestamp, a unique idempotency key, a request signature).",
+   tip:"For simple cases (just a random number/GUID), the built-in {{$randomInt}}, {{$guid}} variables are often enough — no script needed at all."},
+
+  {cmd:"Chaining Requests", name:"Chaining Requests", cat:"Automation", method:"POST",
+   url:"{{base_url}}/api/login",
+   body:`{ <span class="jkey">"email"</span>: <span class="str">"qa@mail.com"</span>, <span class="jkey">"password"</span>: <span class="str">"123456"</span> }`,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`<span class="com">// in this request's Tests:</span>
+<span class="kw">const</span> json = <span class="fn">pm.response</span>.<span class="fn">json</span>();
+<span class="fn">pm.environment</span>.<span class="fn">set</span>(<span class="str">"token"</span>, json.token);`,
+   what:"The result of one request is saved into a variable and used in the next — the classic 'log in first, then use the token in the rest of the collection's requests' scenario.",
+   breakdown:[
+     {c:"pm.response.json()", e:"get the current request's response body as an object"},
+     {c:"pm.environment.set('token', ...)", e:"save a value from the response into an environment variable"},
+     {c:"{{token}} in the next request", e:"use the saved value in the next request's Authorization header"}
+   ],
+   custom:"In <b>your</b> API's login request, save the token/ID of the created entity into an environment variable — the rest of the collection's requests can then reference it as {{token}} with no manual copying.",
+   tip:"This is how full E2E scenarios are built in Postman: create a user → log in → create an order → verify the order, using data carried over from the previous steps."},
+
+  {cmd:"Collection Runner", name:"Running a Collection", cat:"Automation", method:"POST",
+   url:"Collection: 'Orders API' (12 requests)",
+   body:null,
+   status:"11 passed · 1 failed", statusClass:"st-4xx",
+   resp:`Iteration 1/1
+✓ Login - 200 OK
+✓ Create order - 201 Created
+✗ Get order - expected 200, got 404`,
+   what:"The Runner executes every request in a collection in sequence (once, or multiple iterations with different data from a CSV/JSON file) and shows a summary report of every pm.test assertion.",
+   breakdown:[
+     {c:"Iterations", e:"how many times to repeat the whole collection run (useful with different test data)"},
+     {c:"Data file (CSV/JSON)", e:"an external file with input data — each row = one iteration"},
+     {c:"Delay", e:"a pause between requests, if the API is sensitive to call frequency"}
+   ],
+   custom:"Group <b>your</b> project's requests into one collection in a logical order (like a real user flow) and add pm.test to each — the Runner will then show exactly which step of the scenario broke.",
+   tip:"Load a CSV with 10 different test email/password pairs — the Runner will run the same login scenario 10 times with different data."},
+
+  {cmd:"Newman", name:"Running from the CLI / CI", cat:"CI/CD", method:"POST",
+   url:"newman run orders-api.postman_collection.json -e staging.postman_environment.json",
+   body:null,
+   status:"exit code 0", statusClass:"st-2xx",
+   resp:`→ Login
+  ✓ Status is 200
+→ Create order
+  ✓ Status is 201
+  ✓ Has order_id
+
+12 requests, 24 assertions, 0 failed`,
+   what:"Newman is the command-line version of Postman: it runs an exported collection without opening the app. That means the collection can be wired into a CI/CD pipeline step and run automatically on every deploy.",
+   breakdown:[
+     {c:"newman run <collection>.json", e:"run a collection exported from Postman"},
+     {c:"-e <environment>.json", e:"which exported environment (variable set) to use"},
+     {c:"exit code", e:"0 means every check passed; non-zero means something failed — CI relies on exactly this code"}
+   ],
+   custom:"Export <b>your</b> project's collection and environment from Postman (⋮ → Export) and add this command as a step in <code>.github/workflows</code> or another CI config — API tests will then run on every push.",
+   tip:"npm install -g newman — Newman installs as a regular npm package; the desktop Postman app isn't needed separately."},
+
+  {cmd:"Mock Server", name:"API Mock", cat:"Infrastructure", method:"GET",
+   url:"https://xxxx.mock.pstmn.io/api/users/42",
+   body:null,
+   status:"200 OK", statusClass:"st-2xx",
+   resp:`{ <span class="jkey">"id"</span>: <span class="num">42</span>, <span class="jkey">"email"</span>: <span class="str">"mock@mail.com"</span> }`,
+   what:"Postman can spin up a fake server that responds with pre-defined example responses — useful when the backend isn't ready yet but you already need to write and check frontend code/tests against the expected API contract.",
+   breakdown:[
+     {c:"Mock Server", e:"created from a collection — every saved response example becomes a 'default response'"},
+     {c:"mock.pstmn.io", e:"the public domain where Postman hosts the mock server"}
+   ],
+   custom:"If the backend for <b>your</b> endpoint isn't built yet, agree on the response shape (contract) with a developer, save it as an Example in Postman, and create a Mock Server from the collection — you can test against it right away.",
+   tip:"It's also a good way to pin down the expected API contract before development even starts — a kind of living documentation."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -435,12 +638,12 @@ function render(i){
   `).join('');
 
   const headersHTML = t.headers ? `
-    <div class="sub-label">Headers</div>
+    <div class="sub-label">${L.headers}</div>
     <div class="term-body" style="padding-top:4px;">${t.headers.map(h=>`<div><span style="color:#82aaff">${h[0]}:</span> <span class="str">${h[1]}</span></div>`).join('')}</div>
   ` : '';
 
   const bodyHTML = t.body ? `
-    <div class="sub-label">Body</div>
+    <div class="sub-label">${L.body}</div>
     <div class="term-body" style="padding-top:4px;"><pre>${t.body}</pre></div>
   ` : '';
 
@@ -452,7 +655,7 @@ function render(i){
       </div>
       ${headersHTML}
       ${bodyHTML}
-      <div class="sub-label">Response</div>
+      <div class="sub-label">${L.response}</div>
       <span class="resp-status ${t.statusClass}">${t.status}</span>
       <div class="term-body"><pre>${t.resp}</pre></div>
     </div>
@@ -460,13 +663,13 @@ function render(i){
     <div class="section-title">📮 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Для чего нужно</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своём проекте</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -478,7 +681,24 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

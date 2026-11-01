@@ -31,15 +31,23 @@
   }
   .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:21px;
     text-align:center;
@@ -156,7 +164,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -168,7 +176,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -209,24 +216,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Git</span> для тестировщиков</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Git</span> для тестировщиков</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Git-команды для работы с автотестами и поиска регрессий</div>
+  <div class="footer" id="pageFooter">Git-команды для работы с автотестами и поиска регрессий</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>Git</span> для тестировщиков',
+  en: 'Top 10 <span>Git</span> for Testers'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Git-команды для работы с автотестами и поиска регрессий",
+        what:"Для чего нужно", breakdown:"Разбор команды", custom:"Как применить в своей работе" },
+  en: { back:"← Home", footer:"Git commands for working with automated tests and hunting regressions",
+        what:"When to use it", breakdown:"Command breakdown", custom:"How to apply it in your work" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"git clone", name:"Скачать репозиторий", cat:"Начало работы",
    line:"git clone https://github.com/team/qa-automation.git",
    out:"Cloning into 'qa-automation'...\nremote: Counting objects: 1204\nReceiving objects: 100%",
@@ -344,12 +370,138 @@ const tools = [
    ],
    custom:"Нашли подозрительную строку в коде <b>вашего</b> проекта во время code review тест-кейсов или дебага — git blame по этой строке покажет, у кого спросить про логику или контекст изменения.",
    tip:"Используйте вместе с -w, чтобы git blame игнорировал изменения только в пробелах/отступах и не 'терял' реального автора логики."}
-];
+],
+en: [
+  {cmd:"git clone", name:"Download a Repo", cat:"Getting Started",
+   line:"git clone https://github.com/team/qa-automation.git",
+   out:"Cloning into 'qa-automation'...\nremote: Counting objects: 1204\nReceiving objects: 100%",
+   what:"Downloads a full copy of a repository (code + the entire change history) onto your machine. This is the first step to get the automated-test project and start working with it.",
+   breakdown:[
+     {c:"https://.../qa-automation.git", e:"the repo's address — grab it from GitHub/GitLab's 'Clone' button"}
+   ],
+   custom:"Swap the URL for the real address of <b>your</b> project's test-automation repo — your lead or DevOps gives you this during onboarding.",
+   tip:"Private repos require an SSH key or access token set up — without one, git clone fails with an auth error."},
+
+  {cmd:"git status", name:"What Changed", cat:"Basics",
+   line:"git status",
+   out:"On branch feature/login-tests\nChanges not staged for commit:\n  modified:   tests/login.spec.ts\nUntracked files:\n  tests/signup.spec.ts",
+   what:"Shows the current state of your working folder: which files changed, which are new (not yet tracked by Git), which are already staged for commit. The most-used command — run it before any next step.",
+   breakdown:[
+     {c:"modified", e:"a file already tracked by Git that changed since the last commit"},
+     {c:"Untracked files", e:"a new file Git doesn't know about yet"},
+     {c:"branch feature/login-tests", e:"the name of the branch you're currently on"}
+   ],
+   custom:"Run git status in <b>your</b> repo before git add/commit — this lets you see exactly what you're about to commit, so you don't accidentally include a stray file.",
+   tip:"git status can be run as many times as you like — it changes nothing in the repo, it only shows the current state."},
+
+  {cmd:"git pull / fetch", name:"Getting Changes", cat:"Syncing",
+   line:"git pull origin main",
+   out:"Updating 8f2c1a0..1d44bb2\nFast-forward\n tests/checkout.spec.ts | 14 +++++++++-----",
+   what:"Downloads the latest changes from the remote repository and applies them to your local branch. Do this regularly so your tests don't lag behind your teammates' current code.",
+   breakdown:[
+     {c:"git fetch", e:"only downloads changes without applying them to the working folder — safe to peek at what's new"},
+     {c:"git pull", e:"effectively fetch + merge — immediately applies the downloaded changes to the current branch"},
+     {c:"origin main", e:"where to pull from (origin — the remote repo's name) and which branch"}
+   ],
+   custom:"Run git pull in <b>your</b> repo every morning before starting work, and before running the regression suite — that way you're testing current code, not yesterday's.",
+   tip:"If pull complains about conflicts, save your uncommitted changes with git stash first (see below), then pull again."},
+
+  {cmd:"git branch / checkout", name:"Switching Branches", cat:"Basics",
+   line:"git checkout -b bugfix/cart-total",
+   out:"Switched to a new branch 'bugfix/cart-total'",
+   what:"Branches are parallel 'versions' of code. Switching between them lets you, say, compare a bug's behavior on the old and new version of a feature, or create a separate branch for your own test scripts.",
+   breakdown:[
+     {c:"git branch", e:"show every local branch, with the current one marked by an asterisk"},
+     {c:"git checkout &lt;branch&gt;", e:"switch to a branch that already exists"},
+     {c:"git checkout -b &lt;name&gt;", e:"create a new branch and switch to it immediately"}
+   ],
+   custom:"Before writing new automated tests for a feature in <b>your</b> project, create a separate branch (bugfix/... or test/...) — that keeps your changes from mixing with others' before code review.",
+   tip:"git switch is a newer, clearer command specifically for switching branches — it exists as an alternative to the overloaded checkout."},
+
+  {cmd:"git log", name:"Commit History", cat:"Diagnostics",
+   line:"git log --oneline -5",
+   out:"1d44bb2 fix: cart total rounding\n8f2c1a0 feat: add promo code field\na93e7c1 test: checkout flow e2e\n5b0f2aa fix: null pointer on empty cart",
+   what:"Shows the commit history — who changed what, and when. Essential when you need to figure out exactly which change introduced a bug, or find context before filing a bug report.",
+   breakdown:[
+     {c:"--oneline", e:"compact output — one commit per line instead of a verbose block"},
+     {c:"-5", e:"show only the last 5 commits"},
+     {c:"git log -- file", e:"change history for just one specific file"}
+   ],
+   custom:"If a bug in <b>your</b> app appeared 'recently', check git log for the affected file/module over the last few days — a suspicious commit right before the bug often jumps right out.",
+   tip:"git log --author=\"name\" — filter the history by a specific author, if you suspect who made the change."},
+
+  {cmd:"git diff", name:"What Exactly Changed", cat:"Diagnostics",
+   line:"git diff HEAD~1 HEAD -- src/cart.ts",
+   out:"- const total = price * qty;\n+ const total = Math.round(price * qty * 100) / 100;",
+   what:"Shows a line-by-line diff between two states of the code (e.g. your current changes vs the last commit, or two different commits). Helps you understand exactly what changed in the logic.",
+   breakdown:[
+     {c:"- line", e:"was removed (the old version of the code)"},
+     {c:"+ line", e:"was added (the new version of the code)"},
+     {c:"HEAD~1 HEAD", e:"compare the previous commit against the current one"},
+     {c:"-- src/cart.ts", e:"restrict the comparison to a single file"}
+   ],
+   custom:"When a developer says 'I fixed the total rounding' in <b>your</b> project, check git diff for that commit to understand the exact logic change and design precise boundary test cases for it.",
+   tip:"git diff with no arguments shows your own uncommitted changes — handy for a final check before committing."},
+
+  {cmd:"git add / commit", name:"Saving Changes", cat:"Basics",
+   line:"git add tests/checkout.spec.ts\ngit commit -m \"test: add coupon validation cases\"",
+   out:"[bugfix/cart-total 3a7f901] test: add coupon validation cases\n 1 file changed, 24 insertions(+)",
+   what:"add marks a file as ready to be saved ('staged'), commit records the change in the repo's history with an explanatory message. This is how your new test cases become part of the project's shared history.",
+   breakdown:[
+     {c:"git add &lt;file&gt;", e:"add a specific file to the index before committing (or git add . for every changed file)"},
+     {c:"git commit -m \"...\"", e:"record the change with a message explaining WHAT, and sometimes WHY"}
+   ],
+   custom:"Write commit messages so a colleague a month from now understands the point without opening the diff — e.g. 'test: add coupon validation cases' is clearer than just 'fix'.",
+   tip:"Commit in small logical chunks (one set of test cases = one commit) — it's much easier to roll back just the problematic part if something goes wrong."},
+
+  {cmd:"git stash", name:"Shelving Changes Temporarily", cat:"Day-to-Day",
+   line:"git stash\ngit pull origin main\ngit stash pop",
+   out:"Saved working directory and index state WIP on bugfix/cart-total\n...\nDropped stash@{0}",
+   what:"Temporarily 'hides' your uncommitted changes, returning the working folder to the clean state of the last commit, without losing them. Handy when you need to quickly switch tasks or pull changes without conflicts.",
+   breakdown:[
+     {c:"git stash", e:"save the current uncommitted changes into a 'stash' and clean the working folder"},
+     {c:"git stash pop", e:"bring the most recently stashed changes back"},
+     {c:"git stash list", e:"see every stashed change set, if there's more than one"}
+   ],
+   custom:"Use stash in <b>your</b> repo when you're mid-way through writing a test but urgently need to switch branches to check a bug — no need to commit unfinished code just to avoid losing it.",
+   tip:"git stash is meant to be 'temporary' — don't use it as permanent storage for unfinished work, it's easy to forget what's sitting in there."},
+
+  {cmd:"git bisect", name:"Finding the Commit That Broke a Test", cat:"Finding Regressions",
+   line:"git bisect start\ngit bisect bad HEAD\ngit bisect good v2.3.0",
+   out:"Bisecting: 6 revisions left to test after this (roughly 3 steps)\n[a93e7c1] feat: redesign checkout summary",
+   what:"An automated binary search for the 'bad' commit: you tell Git a point where everything was definitely fine (good) and a point where it's definitely broken (bad), and it offers commits in between for you to check, one by one, until it finds the first commit that broke things.",
+   breakdown:[
+     {c:"git bisect start", e:"begin the search session"},
+     {c:"git bisect bad HEAD", e:"mark the current state as containing the bug"},
+     {c:"git bisect good v2.3.0", e:"mark a known-working version/tag as definitely bug-free"},
+     {c:"git bisect good / bad (at each step)", e:"after checking the suggested commit, tell Git whether the bug reproduces there or not"}
+   ],
+   custom:"If a regression test in <b>your</b> project suddenly starts failing and it's unclear exactly when that happened, use bisect between the last known-good version (a release tag) and the current HEAD — instead of manually trawling through dozens of commits.",
+   tip:"git bisect run ./run_test.sh can automatically run your test script at each step and find the guilty commit on its own, with no manual involvement."},
+
+  {cmd:"git blame", name:"Who Changed a Line, and When", cat:"Diagnostics",
+   line:"git blame -L 40,45 src/checkout.ts",
+   out:"a93e7c1 (Ivan Petrov  2026-10-20) 42)  const total = calcTotal(items, coupon);",
+   what:"Shows which commit, by whom, and when, last changed each specific line of a file. Useful for quickly finding the author and context (the commit message) when you need to clarify the logic before filing a bug.",
+   breakdown:[
+     {c:"-L 40,45", e:"limit the output to the line range 40–45, instead of the whole file"},
+     {c:"src/checkout.ts", e:"the file whose line-by-line history you're looking at"}
+   ],
+   custom:"Found a suspicious line of code in <b>your</b> project during a test-case review or while debugging? git blame on that line shows who to ask about the logic or the context of the change.",
+   tip:"Combine with -w so git blame ignores whitespace-only changes and doesn't 'lose' the real author of the logic."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -383,13 +535,13 @@ function render(i){
     <div class="section-title">🔀 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Для чего нужно</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор команды</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -401,7 +553,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

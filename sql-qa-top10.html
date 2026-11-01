@@ -31,15 +31,23 @@
   }
   .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:21px;
     text-align:center;
@@ -168,7 +176,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -180,7 +188,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -221,24 +228,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>SQL</span> для тестировщиков</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>SQL</span> для тестировщиков</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">SQL-запросы для проверки и подготовки тестовых данных</div>
+  <div class="footer" id="pageFooter">SQL-запросы для проверки и подготовки тестовых данных</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>SQL</span> для тестировщиков',
+  en: 'Top 10 <span>SQL</span> for Testers'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"SQL-запросы для проверки и подготовки тестовых данных",
+        what:"Для чего нужно", breakdown:"Разбор запроса", custom:"Как применить в своей работе" },
+  en: { back:"← Home", footer:"SQL queries for checking and preparing test data",
+        what:"When to use it", breakdown:"Query breakdown", custom:"How to apply it in your work" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"SELECT + WHERE", name:"Выборка с условием", cat:"Проверка данных",
    code:`<span class="kw">SELECT</span> id, email, status
 <span class="kw">FROM</span> users
@@ -387,12 +413,169 @@ const tools = [
    ],
    custom:"Перед любым 'опасным' UPDATE/DELETE на <b>вашей</b> тестовой БД начинайте с BEGIN — если результат не тот, что ожидался, просто выполните ROLLBACK вместо восстановления из бэкапа.",
    tip:"Это самый безопасный способ 'потренироваться' писать DELETE/UPDATE, не боясь необратимо сломать тестовые данные."}
-];
+],
+en: [
+  {cmd:"SELECT + WHERE", name:"Filtered Query", cat:"Checking Data",
+   code:`<span class="kw">SELECT</span> id, email, status
+<span class="kw">FROM</span> users
+<span class="kw">WHERE</span> status = <span class="str">'blocked'</span>;`,
+   cols:["id","email","status"],
+   rows:[["14","a@mail.com","blocked"],["27","b@mail.com","blocked"]],
+   what:"A basic query: pick the columns you need from a table and filter rows by a condition. For a tester this is a way to check directly whether the database matches what the UI shows — e.g. whether a user is really marked as blocked after a test.",
+   breakdown:[
+     {c:"SELECT id, email, status", e:"which columns to return (listing them explicitly is better than *)"},
+     {c:"FROM users", e:"which table to pull data from"},
+     {c:"WHERE status = 'blocked'", e:"the row filter — only matching rows come back"}
+   ],
+   custom:"Swap <b>users</b> and <b>status</b> for the real table/column names in <b>your</b> database (check the schema with <code>DESCRIBE users;</code> in MySQL or <code>\\d users</code> in Postgres).",
+   tip:"Always check the database after a UI action — it helps tell a display bug apart from a real data-saving bug."},
+
+  {cmd:"JOIN", name:"Related Tables", cat:"Checking Data",
+   code:`<span class="kw">SELECT</span> o.id, u.email, o.total
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> users u <span class="kw">ON</span> o.user_id = u.id
+<span class="kw">WHERE</span> o.status = <span class="str">'paid'</span>;`,
+   cols:["id","email","total"],
+   rows:[["1042","a@mail.com","59.90"],["1043","c@mail.com","12.50"]],
+   what:"Combines rows from two (or more) tables via a linking field. Needed when the data you're checking is 'spread across' several tables — e.g. the order lives in orders, while the buyer's email lives in users.",
+   breakdown:[
+     {c:"orders o", e:"the main table, with a short alias for convenience"},
+     {c:"JOIN users u", e:"the joined table, also aliased"},
+     {c:"ON o.user_id = u.id", e:"the join condition — which field in one table matches which field in the other"}
+   ],
+   custom:"Find out, in <b>your</b> database schema, which field in one table references another (usually *_id, like user_id) — that's your ON condition.",
+   tip:"If the result is empty even though data exists in both tables, check the type and format of the joined fields (e.g. int vs varchar) — a common cause of test-data mismatches."},
+
+  {cmd:"COUNT / GROUP BY", name:"Counting & Grouping", cat:"Checking Data",
+   code:`<span class="kw">SELECT</span> status, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> cnt
+<span class="kw">FROM</span> orders
+<span class="kw">GROUP BY</span> status;`,
+   cols:["status","cnt"],
+   rows:[["paid","128"],["pending","14"],["cancelled","6"]],
+   what:"Counts how many rows fall into each group of values — e.g. how many orders are in each status. A fast way to check totals without manually counting in the UI, especially on large data volumes.",
+   breakdown:[
+     {c:"COUNT(*)", e:"the number of rows in a group"},
+     {c:"AS cnt", e:"an alias — what to name the resulting column"},
+     {c:"GROUP BY status", e:"which field to group rows by before counting"}
+   ],
+   custom:"Replace <b>status</b> with a field in <b>your</b> table you need a summary of (e.g. product category, user role). Compare the result against the number shown by a dashboard/report in the UI — a mismatch points to a bug.",
+   tip:"HAVING works like WHERE, but after grouping: GROUP BY status HAVING COUNT(*) > 100 — find statuses with more than 100 records."},
+
+  {cmd:"ORDER BY / LIMIT", name:"Sorting & Limiting", cat:"Checking Data",
+   code:`<span class="kw">SELECT</span> id, created_at, total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> created_at <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">5</span>;`,
+   cols:["id","created_at","total"],
+   rows:[["1050","2026-10-29 12:40","22.00"],["1049","2026-10-29 11:05","8.40"]],
+   what:"Sorts the result by a given field and limits how many rows come back. The classic 'show me the 5 latest orders' — checking that a freshly created test record really landed in the database.",
+   breakdown:[
+     {c:"ORDER BY created_at DESC", e:"sort by creation date, newest first"},
+     {c:"LIMIT 5", e:"return only the first 5 rows of the result"}
+   ],
+   custom:"Right after creating a test record via the UI/API, run this query against <b>your</b> table — the fresh record should come out first when sorting by creation date DESC.",
+   tip:"ASC instead of DESC — sort ascending (oldest to newest, smallest to largest)."},
+
+  {cmd:"INSERT", name:"Creating Test Data", cat:"Preparing Data",
+   code:`<span class="kw">INSERT INTO</span> users (email, status, role)
+<span class="kw">VALUES</span> (<span class="str">'qa_test1@mail.com'</span>, <span class="str">'active'</span>, <span class="str">'customer'</span>);`,
+   cols:["result"],
+   rows:[["1 row inserted, id = 301"]],
+   what:"Adds a new row to a table directly, bypassing the UI. Useful when you need specific test data fast (e.g. 1000 users to test pagination) without filling out forms by hand.",
+   breakdown:[
+     {c:"INSERT INTO users (...)", e:"which table and which columns to insert values into"},
+     {c:"VALUES (...)", e:"the actual values, in the same order as the listed columns"}
+   ],
+   custom:"Fill in the real column names and required fields of <b>your</b> table (check with DESCRIBE/\\d) — forgetting a NOT NULL column with no default will make the query fail.",
+   warn:"Only run INSERT against a test/staging database — never production, even 'just to check something'."},
+
+  {cmd:"UPDATE", name:"Modifying Test Data", cat:"Preparing Data",
+   code:`<span class="kw">UPDATE</span> users
+<span class="kw">SET</span> status = <span class="str">'blocked'</span>
+<span class="kw">WHERE</span> id = <span class="num">301</span>;`,
+   cols:["result"],
+   rows:[["1 row updated"]],
+   what:"Changes values in existing rows. Handy for quickly putting a test user into the state you need (blocked, with an unconfirmed email, etc.) without walking through the whole UI flow again.",
+   breakdown:[
+     {c:"SET status = 'blocked'", e:"which field to change and to what value"},
+     {c:"WHERE id = 301", e:"a critical piece — without it EVERY row in the table gets updated"}
+   ],
+   custom:"Replace <b>id = 301</b> with the ID of a specific test record in <b>your</b> project. Before the real run, test the same WHERE as a SELECT first — make sure it picks out exactly that one row, and nothing else.",
+   warn:"UPDATE with no WHERE changes every single row in the table — one of the most common and painful mistakes when working with a database by hand."},
+
+  {cmd:"DELETE", name:"Cleaning Up Test Data", cat:"Preparing Data",
+   code:`<span class="kw">DELETE FROM</span> orders
+<span class="kw">WHERE</span> user_id = <span class="num">301</span> <span class="kw">AND</span> status = <span class="str">'test'</span>;`,
+   cols:["result"],
+   rows:[["3 rows deleted"]],
+   what:"Removes rows from a table. Needed to clean up leftover junk after tests — e.g. delete every order created by a test user so the test database stays clean before the next run.",
+   breakdown:[
+     {c:"DELETE FROM orders", e:"which table to delete rows from"},
+     {c:"WHERE user_id = 301 AND status = 'test'", e:"the condition — only rows matching BOTH conditions get deleted"}
+   ],
+   custom:"Always run the same WHERE as a SELECT first (<code>SELECT * FROM orders WHERE user_id = 301 AND status = 'test'</code>) against <b>your</b> database and confirm you're seeing exactly the rows you're about to delete.",
+   warn:"DELETE with no WHERE removes every row in the table with no easy way back if there's no transaction or backup — run it only on a test database, and carefully."},
+
+  {cmd:"IS NULL", name:"Finding Missing Data", cat:"Finding Bugs",
+   code:`<span class="kw">SELECT</span> id, email, phone
+<span class="kw">FROM</span> users
+<span class="kw">WHERE</span> phone <span class="kw">IS NULL</span> <span class="kw">AND</span> status = <span class="str">'active'</span>;`,
+   cols:["id","email","phone"],
+   rows:[["55","d@mail.com","NULL"],["61","e@mail.com","NULL"]],
+   what:"Finds rows where a field's value is missing (NULL isn't an empty string, it means 'no value at all'). A great way to find data-saving bugs: e.g. active users whose phone number somehow never got saved.",
+   breakdown:[
+     {c:"IS NULL", e:"checks for a missing value (a plain phone = NULL comparison will NOT work)"},
+     {c:"IS NOT NULL", e:"the reverse check — the field is filled in"}
+   ],
+   custom:"Swap in a field from <b>your</b> table that, by business logic, should never be empty (email, phone, order_total) — this query quickly surfaces data 'lost' to a form or API bug.",
+   tip:"One of the most useful checks for regression-testing forms — empty required fields show up immediately."},
+
+  {cmd:"DISTINCT", name:"Unique Values / Duplicates", cat:"Finding Bugs",
+   code:`<span class="kw">SELECT DISTINCT</span> email
+<span class="kw">FROM</span> users;
+
+<span class="com">-- find duplicates:</span>
+<span class="kw">SELECT</span> email, <span class="fn">COUNT</span>(*)
+<span class="kw">FROM</span> users
+<span class="kw">GROUP BY</span> email <span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; <span class="num">1</span>;`,
+   cols:["email","count"],
+   rows:[["dup@mail.com","2"]],
+   what:"DISTINCT removes repeated values from a result. Paired with GROUP BY + HAVING, it finds duplicates that shouldn't exist under the business rules (e.g. two users sharing the same email).",
+   breakdown:[
+     {c:"SELECT DISTINCT email", e:"return each unique email value exactly once"},
+     {c:"GROUP BY email HAVING COUNT(*) > 1", e:"group by email and keep only the groups with more than one row — i.e. duplicates"}
+   ],
+   custom:"Swap <b>email</b> for a field in <b>your</b> table whose uniqueness matters for the business logic (order number, login, product SKU).",
+   tip:"If the database has a UNIQUE constraint on a field, duplicates shouldn't exist in theory — their appearance is itself a sign of a serious bug."},
+
+  {cmd:"Transactions", name:"BEGIN / ROLLBACK", cat:"Safe DB Work",
+   code:`<span class="kw">BEGIN</span>;
+<span class="kw">DELETE FROM</span> orders <span class="kw">WHERE</span> status = <span class="str">'test'</span>;
+<span class="com">-- check the result...</span>
+<span class="kw">ROLLBACK</span>; <span class="com">-- or COMMIT;</span>`,
+   cols:["result"],
+   rows:[["changes rolled back, the DB is back to how it was before the query"]],
+   what:"A transaction groups several operations into one 'unit of work': you can make changes, look at the result, and either confirm them (COMMIT) or undo everything completely (ROLLBACK) — as if nothing happened.",
+   breakdown:[
+     {c:"BEGIN", e:"start a transaction — subsequent changes aren't final yet"},
+     {c:"ROLLBACK", e:"undo every change made since the transaction began"},
+     {c:"COMMIT", e:"make the changes final and permanent"}
+   ],
+   custom:"Before any 'risky' UPDATE/DELETE on <b>your</b> test database, start with BEGIN — if the result isn't what you expected, just run ROLLBACK instead of restoring from a backup.",
+   tip:"This is the safest way to 'practice' writing DELETE/UPDATE statements without fear of permanently wrecking test data."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -426,13 +609,13 @@ function render(i){
     <div class="section-title">🗄 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Для чего нужно</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор запроса</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -444,7 +627,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

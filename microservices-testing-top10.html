@@ -32,15 +32,23 @@
   }
   .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:19px;
     text-align:center;
@@ -167,7 +175,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -179,7 +187,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -220,24 +227,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Тестирование микросервисов</span></h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Тестирование микросервисов</span></h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Памятка по тестированию распределённых систем</div>
+  <div class="footer" id="pageFooter">Памятка по тестированию распределённых систем</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>Тестирование микросервисов</span>',
+  en: 'Top 10 <span>Testing Microservices</span>'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Памятка по тестированию распределённых систем",
+        what:"Что это", breakdown:"Ключевые понятия", custom:"Как применить в своей системе" },
+  en: { back:"← Home", footer:"A cheatsheet for testing distributed systems",
+        what:"What it is", breakdown:"Key concepts", custom:"How to apply it in your system" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Contract Testing", name:"Контрактное тестирование", cat:"Интеграция",
    body:`<span class="svc">Order Service</span> <span class="arrow">ожидает от</span> <span class="svc">Payment Service</span>:
 
@@ -400,12 +426,183 @@ Idempotency-Key: <span class="str">a93e7c1-key</span>
    ],
    custom:"При воспроизведении бага в <b>вашей</b> системе найдите correlation ID этого запроса (обычно в заголовках ответа через DevTools) и используйте его как ключевой поисковый запрос в системе логирования — вместо попыток найти нужные строки по времени вручную в каждом сервисе отдельно.",
    tip:"Если запрос прошёл через несколько сервисов, но у всех логов разные/отсутствующие correlation ID — это само по себе баг инфраструктуры логирования, который стоит завести отдельно, он мешает диагностировать всё остальное."}
-];
+],
+en: [
+  {cmd:"Contract Testing", name:"Contract Testing", cat:"Integration",
+   body:`<span class="svc">Order Service</span> <span class="arrow">expects from</span> <span class="svc">Payment Service</span>:
+
+{
+  <span class="jkey">"status"</span>: <span class="str">"approved"</span> | <span class="str">"declined"</span>,
+  <span class="jkey">"transaction_id"</span>: <span class="str">"string"</span>
+}
+
+<span class="ok">✓</span> Pact file verified by both sides independently`,
+   what:"Checking that an API contract between two services (the request/response shape) is honored by both sides, without having to spin them up together. The consumer describes what it expects from the provider; the provider runs that description against its real API.",
+   breakdown:[
+     {c:"Consumer-driven contract", e:"the team using the service describes its expectations of the API — not the other way around"},
+     {c:"Pact / Pact Broker", e:"a popular tool for storing and verifying contracts between teams"},
+     {c:"Independent verification", e:"each side tests its own code against the contract in its own CI, with no need to wait for the other team"}
+   ],
+   custom:"For <b>your</b> system, start with the most fragile integrations — where two services' APIs change often and an end-to-end test only catches breakage too late (already in staging).",
+   tip:"Contract testing doesn't fully replace integration tests, but it catches 80% of 'forgot to tell the other team about an API change' bugs far earlier and more cheaply."},
+
+  {cmd:"Service Virtualization", name:"Dependency Virtualization", cat:"Isolation",
+   body:`<span class="svc">Order Service</span> <span class="arrow">(under test)</span>
+      │
+      ▼
+<span class="com">[WireMock stub]</span> ← instead of the real
+<span class="svc">Payment Service</span>
+
+<span class="fn">stub</span>(POST /pay) → <span class="num">200</span> { status: <span class="str">"approved"</span> }`,
+   what:"Swapping a real dependent service for a stub/mock that replies with pre-defined data. Lets you test one service in isolation, without depending on the availability, stability, or data state of other services.",
+   breakdown:[
+     {c:"Stub / Mock server", e:"tools like WireMock, MockServer, Mountebank spin up a fake HTTP server with predefined responses"},
+     {c:"Recorded responses", e:"some tools can 'record' a service's real responses once and replay them as a stub"}
+   ],
+   custom:"Pick the service in <b>your</b> architecture that's most often unavailable/unstable in the test environment (e.g. an external payment gateway) and replace it with a stub in tests that aren't specifically checking that integration.",
+   tip:"Use virtualization for unit/component tests, but don't skip separate real integration tests against the actual service, at least on staging — a stub can 'lie' if the real API has changed."},
+
+  {cmd:"Health Checks", name:"Service Health Checks", cat:"Monitoring",
+   body:`<span class="fn">GET</span> /health
+
+<span class="num">200</span> {
+  <span class="jkey">"status"</span>: <span class="str">"UP"</span>,
+  <span class="jkey">"db"</span>: <span class="str">"UP"</span>,
+  <span class="jkey">"cache"</span>: <span class="str">"DEGRADED"</span>
+}`,
+   what:"An endpoint a service exposes specifically to check its own health and that of its direct dependencies (DB, cache, queue). Used by orchestration systems (Kubernetes) and monitoring to know whether a service is ready to receive traffic.",
+   breakdown:[
+     {c:"/health or /actuator/health", e:"the overall status of the service and its critical dependencies"},
+     {c:"/ready (readiness probe)", e:"whether the service can accept new traffic right now (e.g. right after startup)"},
+     {c:"/live (liveness probe)", e:"whether the process is alive at all — if not, Kubernetes restarts it"}
+   ],
+   custom:"Before running tests against <b>your</b> service in CI, add a step that waits for a 200 from /health, instead of a fixed sleep of N seconds after deployment.",
+   tip:"If a service's health check always says 'UP' even when the database is actually unreachable, that's a bug in its own right — it means the problem only surfaces through real user-facing errors."},
+
+  {cmd:"Distributed Tracing", name:"Request Tracing", cat:"Diagnostics",
+   body:`trace_id: <span class="str">4f7a-91c2</span>
+
+<span class="svc">API Gateway</span>     12ms
+  └─ <span class="svc">Order Service</span>  45ms
+       └─ <span class="svc">Payment Service</span> 230ms  <span class="bad">← slow</span>
+       └─ <span class="svc">Inventory Service</span> 18ms`,
+   what:"A single identifier (trace ID) is attached to a request at the system's entry point and carried through every service that handles it. Tools like Jaeger/Zipkin visualize the entire request path and the time spent in each service — without this, finding 'who's at fault' in a distributed system is nearly impossible.",
+   breakdown:[
+     {c:"trace_id", e:"a unique ID for the whole request, the same across every service it passes through"},
+     {c:"span", e:"one 'segment' of work inside a trace — e.g. the time a specific service spent on it"},
+     {c:"Jaeger / Zipkin", e:"popular tools for collecting and visualizing traces"}
+   ],
+   custom:"When a bug in <b>your</b> system shows up as 'sometimes loads slowly' with no clear cause, find that request's trace_id (often in a response header or logs) and see exactly which service in the chain is 'slow'.",
+   tip:"Ask developers for a trace_id when filing a bug about a slow or incorrect response — it dramatically speeds up diagnosis compared to 'it just loaded slowly for me'."},
+
+  {cmd:"Chaos Engineering", name:"Resilience Testing", cat:"Resilience",
+   body:`<span class="com">Experiment: take down Payment Service for 30 sec</span>
+
+<span class="fn">Hypothesis:</span> Order Service shows the
+user a clear error and doesn't lose the order
+
+<span class="ok">✓</span> confirmed   <span class="bad">✗</span> order got stuck in processing`,
+   what:"Deliberately introducing faults into a system (taking down a service, adding network delay, running out of memory) under controlled conditions — to check how resilient the rest of the system is to one part failing, instead of finding out during a real incident.",
+   breakdown:[
+     {c:"Hypothesis", e:"a clear expectation: 'if service X fails, the system should behave like this' — not just 'break it and see'"},
+     {c:"Blast radius", e:"limiting the experiment — e.g. only 5% of traffic, or staging only — so you don't take everything down"},
+     {c:"Chaos Monkey / Gremlin / Litmus", e:"tools for controlled fault injection"}
+   ],
+   custom:"Start small in <b>your</b> system: on staging, briefly take down a non-critical dependent service and check whether the main service shows the user a clear error, or just 'hangs' with no feedback.",
+   warn:"Never start practicing chaos engineering directly in production without team agreement and a clear rollback plan — begin on staging and widen the scope gradually."},
+
+  {cmd:"Idempotency", name:"Operation Idempotency", cat:"Reliability",
+   body:`<span class="fn">POST</span> /payments
+Idempotency-Key: <span class="str">a93e7c1-key</span>
+
+<span class="com">1st request:</span>  <span class="num">201</span> Created, $50 charged
+<span class="com">2nd (retry, same key):</span> <span class="num">200</span> OK, NOT charged again`,
+   what:"Checking that resending the same request (e.g. due to a dropped connection and a client-side retry) doesn't duplicate the action — a classic risk in microservices, where the network between services is inherently unreliable.",
+   breakdown:[
+     {c:"Idempotency-Key", e:"a unique key the client sends with the request — the service remembers it and won't repeat an action it already performed"},
+     {c:"Safe retries", e:"a client-side mechanism that automatically resends a request on a network error"}
+   ],
+   custom:"Find the operations in <b>your</b> system where duplication is especially dangerous (charging money, sending an email, creating an order) — explicitly test 'send the same request twice in a row' and confirm the result wasn't duplicated.",
+   tip:"This test is easy to automate: just call the same POST request with the same idempotency key twice in a row and compare the data state before/after."},
+
+  {cmd:"Eventual Consistency", name:"Eventual Consistency", cat:"Data",
+   body:`<span class="svc">Order Service</span> creates an order → <span class="num">200</span> instantly
+
+<span class="com">... the event travels through a queue ...</span>
+
+<span class="svc">Inventory Service</span> decrements stock
+<span class="fn">after</span> ~<span class="num">300</span>ms (asynchronously)
+
+<span class="bad">✗</span> checking stock right away still shows the old value`,
+   what:"In many microservice systems, data is synchronized between services not instantly but via events/queues — for a short while, different services may 'see' slightly different states. A test needs to account for this instead of expecting the instant consistency of a monolith with one database.",
+   breakdown:[
+     {c:"Event-driven sync", e:"a service publishes an event ('order created'), other services react to it asynchronously"},
+     {c:"Race conditions in tests", e:"a common mistake — checking state right after an action, before the event has arrived yet"}
+   ],
+   custom:"If a test in <b>your</b> system occasionally 'flakes' right after creating/changing data, check whether the cause is asynchronous event propagation; add polling for the final state with a timeout, instead of a fixed pause or an instant check.",
+   tip:"Instead of sleep(1000), use polling with a timeout: repeatedly re-check the state until it matches expectations or a reasonable limit is reached."},
+
+  {cmd:"Circuit Breaker", name:"Testing Resilience Patterns", cat:"Resilience",
+   body:`Payment Service returns errors 5 times in a row
+
+<span class="fn">Circuit Breaker:</span> CLOSED → <span class="bad">OPEN</span>
+
+<span class="com">Next requests (30 sec):</span>
+instant fallback response,
+no real call to the failing service`,
+   what:"A pattern where a consuming service stops calling an already clearly 'broken' dependency for a while (instead of continuing to retry and piling up timeouts), returning a fast fallback response instead. Checking that this mechanism actually kicks in is an important part of resilience testing.",
+   breakdown:[
+     {c:"CLOSED", e:"normal state — requests to the dependency go through as usual"},
+     {c:"OPEN", e:"the service is considered 'broken' — requests to it are blocked, a fallback returns immediately"},
+     {c:"HALF-OPEN", e:"a trial period — a few requests are let through to check whether the service has recovered"}
+   ],
+   custom:"Test in <b>your</b> system: when you simulate constant errors from a dependency, does the circuit breaker really open (response time drops sharply instead of timeouts piling up), and does it later 'try again' and close once the service recovers?",
+   tip:"Resilience4j and Hystrix are popular libraries implementing this pattern in Java microservices — worth asking developers which one your system uses, so you know its timeouts and thresholds."},
+
+  {cmd:"Test Pyramid", name:"The Test Pyramid for Microservices", cat:"Strategy",
+   body:`         ▲
+        / \\    E2E (few, slow,
+       / E2E\\   the full path through services)
+      /-------\\
+     /Component\\  Contract/component tests
+    /-----------\\ (a service + its stubs)
+   /    Unit     \\ Unit tests (many, fast,
+  /---------------\\ inside a single service)`,
+   what:"In a microservice architecture, 'wide' end-to-end tests spanning the whole service landscape become slow, brittle, and expensive to maintain. The pyramid is a reminder: most checks should live at the lower, fast levels, with E2E as only a thin top layer for critical end-to-end scenarios.",
+   breakdown:[
+     {c:"Unit", e:"test one service's logic in isolation, with no network — the fastest and cheapest"},
+     {c:"Component / Contract", e:"test a whole service, but its dependencies via stubs or contracts, without spinning up the whole system"},
+     {c:"E2E", e:"a real end-to-end scenario across several real services — slow, brittle, but catches what the other levels can't"}
+   ],
+   custom:"If regression runs in <b>your</b> project take 40 minutes and flake often, count the ratio of E2E to unit/component tests — the pyramid is probably inverted, and some of those E2E tests should be replaced with cheaper contract tests.",
+   tip:"Reserve E2E tests for truly critical end-to-end paths (the full checkout flow), not for checking every small business-rule tweak — a lower level is enough for those."},
+
+  {cmd:"Correlation ID", name:"End-to-End ID in Logs", cat:"Diagnostics",
+   body:`<span class="com">Logs from three different services, same request:</span>
+
+[API-GW]      x-correlation-id=<span class="str">7f3a21</span> request in
+[ORDER-SVC]   x-correlation-id=<span class="str">7f3a21</span> order created
+[PAYMENT-SVC] x-correlation-id=<span class="str">7f3a21</span> <span class="bad">payment failed</span>`,
+   what:"Similar to distributed tracing, but simpler: one ID is passed through a request header into every service and ends up in their logs. Knowing just that one ID, you can pull together every related log line from different services and different logging systems into a single picture of what happened.",
+   breakdown:[
+     {c:"x-correlation-id / x-request-id", e:"a header generated at the system's entry point (usually the API Gateway) and passed onward"},
+     {c:"Centralized log aggregator", e:"ELK/Grafana Loki and similar tools let you search by this ID across every service at once"}
+   ],
+   custom:"When reproducing a bug in <b>your</b> system, find that request's correlation ID (usually in response headers via DevTools) and use it as your main search query in the logging system, instead of hunting for the right lines by timestamp in each service separately.",
+   tip:"If a request passed through several services but each one's logs show a different or missing correlation ID, that's a logging-infrastructure bug worth filing on its own — it gets in the way of diagnosing everything else."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -434,13 +631,13 @@ function render(i){
     <div class="section-title">🧩 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Что это</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Ключевые понятия</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей системе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -452,7 +649,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

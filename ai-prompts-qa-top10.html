@@ -32,15 +32,23 @@
   }
   .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:19px;
     text-align:center;
@@ -168,7 +176,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--orange);
     background:#0e1a22;
@@ -180,7 +188,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -221,24 +228,45 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>AI-промптов</span> для QA</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>AI-промптов</span> для QA</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Готовые шаблоны промптов для повседневных задач тестировщика</div>
+  <div class="footer" id="pageFooter">Готовые шаблоны промптов для повседневных задач тестировщика</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>AI-промптов</span> для QA',
+  en: 'Top 10 <span>AI Prompts</span> for QA'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Готовые шаблоны промптов для повседневных задач тестировщика",
+        what:"Когда использовать", breakdown:"Разбор промпта", custom:"Как адаптировать под свой проект",
+        promptTab:"prompt", copy:"Copy", copied:"Copied ✓", error:"Error", exampleOut:"Пример ответа AI" },
+  en: { back:"← Home", footer:"Ready-made prompt templates for everyday testing tasks",
+        what:"When to use it", breakdown:"Prompt breakdown", custom:"How to adapt it for your project",
+        promptTab:"prompt", copy:"Copy", copied:"Copied ✓", error:"Error", exampleOut:"Example AI response" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Тест-кейсы", name:"Из требований/user story", cat:"Проектирование",
    prompt:`Ты опытный QA-инженер. На основе требования ниже составь набор тест-кейсов.
 
@@ -480,10 +508,256 @@ pm.test("Has order_id", () => {
    ],
    custom:"Подставляйте реальный базовый URL и структуру запроса <b>вашего</b> API — если есть точная OpenAPI/Swagger документация, вставьте релевантный фрагмент прямо в промпт для максимальной точности.",
    tip:"Для защищённых эндпоинтов сразу уточните в промпте, что нужен заголовок Authorization с переменной {{token}} — иначе AI может забыть про авторизацию в сгенерированном примере."}
-];
+],
+en: [
+  {cmd:"Test Cases", name:"From Requirements/User Story", cat:"Design",
+   prompt:`You are an experienced QA engineer. Based on the requirement below, write a set of test cases.
+
+Requirement:
+<span class="ph">[paste the user story or feature description]</span>
+
+For each test case, include: title, preconditions, steps, expected result.
+Cover: positive scenarios, negative scenarios, boundary values.
+Format: a table.`,
+   out:`| ID | Title | Steps | Expected |
+| TC-01 | Successful login | ... | Redirect to dashboard |
+| TC-02 | Empty password | ... | Validation error |
+| TC-03 | 101 chars in field | ... | Field truncated/error |`,
+   what:"The most common everyday request: turning a requirement or ticket into a structured set of test cases. AI is good at finding obvious positive scenarios and some boundary cases, but it doesn't replace your product knowledge — the final completeness check is always on you.",
+   breakdown:[
+     {c:"the role (\"experienced QA engineer\")", e:"sets the context and tone of the response — without it the model tends to give a more generic, less professional result"},
+     {c:"explicitly listing the coverage", e:"positive/negative/boundary — without this hint the model often sticks to just the 'happy path'"},
+     {c:"the response format", e:"a table — ready to paste straight into a test-case manager (TestRail, Zephyr, Excel)"}
+   ],
+   custom:"Paste in the full real text of <b>your</b> project's ticket/acceptance criteria, including technical details (field limits, business rules) — the more specific the input, the less the AI has to invent on its own.",
+   tip:"Always read through and critically check the result — AI can suggest a case that doesn't apply to your system, or miss a specific business rule that isn't in the requirement text."},
+
+  {cmd:"Boundary Values", name:"Edge Cases for a Field", cat:"Design",
+   prompt:`For an input field with the following rules, come up with every boundary
+and unusual value worth testing:
+
+Field: <span class="ph">[field name, e.g. "Transfer amount"]</span>
+Rules: <span class="ph">[e.g.: number, from 1 to 100000, up to 2 decimal places]</span>
+
+Split into: valid boundaries, invalid boundaries, unusual input
+(special characters, unicode, SQL injection, a very long string, etc.)`,
+   out:`Valid boundaries: 1, 1.00, 99999.99, 100000
+Invalid boundaries: 0, 0.999, 100000.01, -1
+Unusual input: "1e10", "100,00", "١٠٠", "' OR 1=1 --", a 500-digit number`,
+   what:"Generating boundary values and 'weird' input is an area where AI is especially useful: it remembers far more typical edge-case patterns (unicode, exponential number notation, SQL injection in a field) than a human keeps in mind on the fly.",
+   breakdown:[
+     {c:"the field's exact rules", e:"range, type, format — the more precisely the constraints are described, the more precise the boundary values"},
+     {c:"explicit categories (valid/invalid/unusual)", e:"structures the answer and reminds it to check not just numbers but injections/special characters too"}
+   ],
+   custom:"Fill in the real validation rules of a specific field in <b>your</b> app — if you don't know the exact rules, check with a developer first, otherwise the AI is just guessing the same as you would.",
+   tip:"Use this prompt together with the boundary-value technique from the 'Boundary Value Analysis' card — AI just speeds up the enumeration here, the technique itself stays classic."},
+
+  {cmd:"Bug Report", name:"Format from a Description", cat:"Documentation",
+   prompt:`Format this into a bug report using the standard template, based on
+my rough description below. Rewrite the wording to be neutral and precise.
+
+My description: <span class="ph">[describe in your own words what you saw]</span>
+Environment: <span class="ph">[browser/OS/app version]</span>
+
+Structure: Title, Steps to Reproduce, Actual Result,
+Expected Result, Severity (with justification).`,
+   out:`Title: "Checkout" button is inactive with a filled cart
+
+Steps:
+1. Add an item to the cart
+2. Go to the "Cart" section
+3. Click "Checkout"
+
+Actual result: the button doesn't respond to clicks
+Expected result: navigate to the checkout page
+Severity: High — blocks the core purchase flow`,
+   what:"Turns raw notes ('the button doesn't work, I clicked it like this and nothing happened') into a formal bug report with neutral wording — saves time on formatting and strips out emotional or imprecise language.",
+   breakdown:[
+     {c:"\"my rough description\"", e:"you can write it exactly as it comes, even messily — the AI's job is to clean up the text, not invent details"},
+     {c:"\"rewrite to be neutral\"", e:"removes stray judgment words like 'terribly slow' in favor of facts"},
+     {c:"explicitly asking for Severity with justification", e:"forces the model to argue for its assessment, instead of just picking one at random"}
+   ],
+   custom:"Only describe what you ACTUALLY observed in <b>your</b> app — don't ask the AI to 'fill in' the actual result; it should be based on what you saw, not on the model's assumption.",
+   warn:"Never let the AI invent reproduction steps you didn't actually test — it can generate a plausible but wrong scenario; the steps must be exactly the ones you performed."},
+
+  {cmd:"Explain an Error", name:"Parsing a Stack Trace/Log", cat:"Diagnostics",
+   prompt:`Explain in plain language what this error means and which module/layer
+of the system it most likely came from. Don't suggest a code fix —
+I'm a tester, I need to understand the cause for a bug report.
+
+Error:
+<span class="ph">[paste the error text / stack trace / log lines]</span>`,
+   out:`TypeError: Cannot read properties of undefined (reading 'name')
+  at renderUser (app.js:142)
+
+Explanation: the code tries to read the .name field on the user object,
+but user is undefined at that moment — meaning the user's data
+hasn't arrived from the server yet (or the request failed)
+by the time the component renders. Likely a data-loading
+order issue on the frontend.`,
+   what:"When Console DevTools or a backend log shows a confusing error, AI helps understand it in plain language fast, without waiting on a developer. Useful specifically for understanding the cause when writing a precise bug report, not for writing a fix.",
+   breakdown:[
+     {c:"\"don't suggest a code fix\"", e:"keeps the answer in a tester's territory — an explanation, not a solution you shouldn't be proposing instead of a developer"},
+     {c:"\"for a bug report\"", e:"sets the right level of detail — technical enough, but understandable without deep codebase knowledge"}
+   ],
+   custom:"Copy the error from <b>your</b> app as-is, with the full stack trace if it's visible in DevTools/logs — the more context (line numbers, function names), the more precise the explanation.",
+   tip:"This works great as an intermediate step: first understand the error with AI's help, then decide whether that's enough for a bug report or whether a developer needs to dig deeper."},
+
+  {cmd:"Test Data", name:"Generating JSON/CSV", cat:"Preparing Data",
+   prompt:`Generate 10 test records in JSON format following this schema,
+include a variety of realistic values, including a few boundary
+cases (an empty string, max length, special characters).
+
+Schema:
+<span class="ph">[describe the fields and their types/constraints]</span>`,
+   out:`[
+  { <span class="jkey">"email"</span>: <span class="str">"ivan.petrov@mail.com"</span>, <span class="jkey">"age"</span>: <span class="num">34</span> },
+  { <span class="jkey">"email"</span>: <span class="str">"a@b.co"</span>, <span class="jkey">"age"</span>: <span class="num">18</span> },
+  { <span class="jkey">"email"</span>: <span class="str">""</span>, <span class="jkey">"age"</span>: <span class="num">0</span> },
+  ...
+]`,
+   what:"Fast generation of realistic test-data sets for seeding a database, API tests, or checking an import — instead of manually inventing 10-20 rows of names/emails/dates.",
+   breakdown:[
+     {c:"an exact field schema", e:"types, constraints, format — without this AI guesses the structure arbitrarily"},
+     {c:"explicitly asking for boundary cases", e:"otherwise you'll only get 'ideal' data with no empty strings or extreme values"}
+   ],
+   custom:"Describe the real data schema of <b>your</b> project (you can take it straight from API docs or a table's DDL) — the generated data will then be ready to import via INSERT/API with no manual reformatting.",
+   warn:"Don't use AI-generated 'realistic' emails/names as real personal data in systems with real notifications (email, SMS) — use test domains (@example.com) to avoid accidentally messaging real people."},
+
+  {cmd:"Automated Test from Steps", name:"Manual Steps → Playwright", cat:"Automation",
+   prompt:`Turn these manual test-case steps into an automated test in Playwright + TypeScript.
+Use getByRole/getByTestId for locators, add meaningful
+assertions at each key step.
+
+Steps:
+<span class="ph">[paste the test case steps, one per line]</span>
+
+Selectors/testids already known:
+<span class="ph">[list any specific data-testid you know]</span>`,
+   out:`test('successful login', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByTestId('email').fill('user@mail.com');
+  await page.getByTestId('password').fill('pass123');
+  await page.getByRole('button', { name: 'Log in' }).click();
+  await expect(page).toHaveURL(/\\/dashboard/);
+});`,
+   what:"Speeds up turning an already-written, manually verified test case into automated-test code — especially useful for beginners in automation, when Playwright's structure isn't 'in your hands' yet but the scenario's logic is already clear.",
+   breakdown:[
+     {c:"specific manual steps", e:"the more detailed the steps (which exact button, which field), the more precise the resulting code"},
+     {c:"known testids", e:"if you already have them, AI uses them instead of guessing selectors 'from thin air' — a common cause of non-working generated code"}
+   ],
+   custom:"Provide the real data-testid/roles of elements in <b>your</b> app, if you know them (check Elements in DevTools) — without them AI generates plausible-looking but non-functional code with made-up selectors.",
+   warn:"Always run the generated test before committing — AI can get a specific element's real behavior wrong (e.g. async loading); the code needs checking, not blind trust."},
+
+  {cmd:"Test Case Review", name:"Finding Coverage Gaps", cat:"Quality Check",
+   prompt:`Act as a strict test-case reviewer. Analyze the set below and point out:
+which scenarios are missing, which steps are ambiguous,
+which cases duplicate each other.
+
+My test cases:
+<span class="ph">[paste the list/table of test cases]</span>
+
+Feature context (to understand the business logic):
+<span class="ph">[briefly describe what the feature does]</span>`,
+   out:`Missing:
+- No case for using two promo codes at once
+- Expired-session scenario during checkout isn't covered
+
+Ambiguous:
+- TC-07 "Check the cart" — doesn't say WHAT exactly to check
+
+Duplicates:
+- TC-03 and TC-11 check the same thing in different words`,
+   what:"AI as a 'second pair of eyes' on your test-case set before showing it to the team — finds obvious coverage gaps and vague wording that are hard to spot in your own writing.",
+   breakdown:[
+     {c:"\"strict reviewer\"", e:"sets a critical rather than approving tone for the response — otherwise the model tends to just praise what's there"},
+     {c:"feature context, separate from the cases", e:"without understanding the business logic, AI can't spot substantive gaps, only textual issues"}
+   ],
+   custom:"Describe the feature context in <b>your</b> product as if explaining it to a new colleague from scratch — including non-obvious business rules (e.g. 'promo codes can't be combined'), otherwise AI won't know what's actually worth checking further.",
+   tip:"This isn't a substitute for review by a human colleague, especially for domain-specific knowledge, but it's a good free first pass before sending cases for team review."},
+
+  {cmd:"Log Analysis", name:"Finding the Cause in a Large Log", cat:"Diagnostics",
+   prompt:`Here's a log excerpt from the period when the problem happened.
+Find suspicious lines (errors, timeouts, anomalies) and suggest
+a likely sequence of events that led to the failure.
+If there isn't enough data for a clear conclusion, say exactly
+what else needs to be checked.
+
+Logs:
+<span class="ph">[paste the log excerpt you managed to collect]</span>`,
+   out:`Suspicious sequence:
+12:40:01 DB connection pool exhausted (warning)
+12:40:15 Payment request timeout
+12:40:16 Order status stuck in "processing"
+
+Likely cause: the DB connection pool being exhausted
+led to a timeout on the payment service request.
+
+Not enough data: no logs visible from
+Payment Service itself — worth requesting those separately.`,
+   what:"When a log is huge and it's unclear which line to start from, AI can quickly highlight suspicious patterns (errors, timeouts close together in time) and suggest a hypothesis for the event chain, which you then go check deliberately.",
+   breakdown:[
+     {c:"\"if there isn't enough data, say what to check\"", e:"a critical instruction: without it the model sometimes 'invents' a confident conclusion where the data genuinely isn't enough"},
+     {c:"an excerpt from the exact relevant period", e:"not the whole day's log — otherwise the relevant signal gets lost in noise"}
+   ],
+   custom:"Paste in <b>your</b> app's logs as-is, ideally from several related services over the same time window (see the 'Correlation ID' card from the microservices topic) — this sharply improves the quality of the hypothesis.",
+   warn:"Treat the AI's output as a hypothesis to verify, not a finished diagnosis for a bug report — confirm it with real data (a trace, reproducing it again) before stating it as the 'cause' in a ticket."},
+
+  {cmd:"SQL from a Description", name:"A Query to Check the DB", cat:"Checking Data",
+   prompt:`Write a SQL query to check the following condition in the database.
+Table structure (simplified):
+<span class="ph">[list the tables and key fields you know]</span>
+
+What needs to be checked:
+<span class="ph">[describe in your own words what you want to find]</span>`,
+   out:`SELECT u.id, u.email, COUNT(o.id) AS orders_count
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.status = 'active'
+GROUP BY u.id, u.email
+HAVING COUNT(o.id) = 0;
+
+-- finds active users with zero orders`,
+   what:"When you need to quickly check a hypothesis in the database but the exact JOIN/GROUP BY syntax doesn't come to mind right away, AI writes the query from a plain-language description of the condition — you just run it and check the result.",
+   breakdown:[
+     {c:"the table structure", e:"even an approximate one (table and field names) greatly raises the chance of a working query on the first try"},
+     {c:"a plain-language condition, not ready-made SQL", e:"describe in natural language what you want to know — leave the syntax to the model"}
+   ],
+   custom:"Give the real table/column names of <b>your</b> database (the DESCRIBE/\\d command from the 'SELECT + WHERE' card) — without them AI will guess plausible-sounding names that don't exist in your actual schema.",
+   tip:"Always run the generated query as a SELECT first, even if you ultimately need an UPDATE/DELETE — ask AI to write the SELECT version first to check which rows would be affected."},
+
+  {cmd:"API Test from a Description", name:"curl / a Postman Test", cat:"API",
+   prompt:`Write a curl request and a matching Postman test
+(the Tests tab, pm.test) to check the following endpoint.
+
+Endpoint: <span class="ph">[method and path, e.g. POST /api/orders]</span>
+Expected behavior: <span class="ph">[describe what should happen]</span>
+Example request body (if needed): <span class="ph">[JSON]</span>`,
+   out:`curl -X POST https://api.app.test/orders \\
+  -H "Content-Type: application/json" \\
+  -d '{"productId":105,"qty":2}'
+
+// Postman Tests:
+pm.test("Status 201", () => {
+  pm.response.to.have.status(201);
+});
+pm.test("Has order_id", () => {
+  pm.expect(pm.response.json().order_id).to.exist;
+});`,
+   what:"Quickly get a ready-made curl for manual checking and a matching Postman test script, from a plain-language description of an endpoint's expected behavior — no need to recall the exact pm.test syntax or curl flags on the fly.",
+   breakdown:[
+     {c:"the endpoint's method and path", e:"the minimum info needed — without it AI can't write a correct URL/method"},
+     {c:"expected behavior in words", e:"the model turns it into concrete pm.test checks itself — status code, presence of fields, etc."}
+   ],
+   custom:"Fill in the real base URL and request structure of <b>your</b> API — if you have precise OpenAPI/Swagger docs, paste the relevant fragment right into the prompt for maximum accuracy.",
+   tip:"For protected endpoints, mention right in the prompt that you need an Authorization header with a {{token}} variable — otherwise AI might forget authorization in the generated example."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function stripHtml(html){
   const tmp = document.createElement('div');
@@ -492,6 +766,10 @@ function stripHtml(html){
 }
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -509,24 +787,24 @@ function render(i){
   panel.innerHTML = `
     <div class="term">
       <div class="term-bar">
-        <div class="label"><div class="dot" style="background:#ff5f56"></div><div class="dot" style="background:#ffbd2e"></div><div class="dot" style="background:#27c93f"></div>&nbsp;prompt</div>
-        <button class="copy-btn" id="copyBtn">Copy</button>
+        <div class="label"><div class="dot" style="background:#ff5f56"></div><div class="dot" style="background:#ffbd2e"></div><div class="dot" style="background:#27c93f"></div>&nbsp;${L.promptTab}</div>
+        <button class="copy-btn" id="copyBtn">${L.copy}</button>
       </div>
       <div class="prompt-body" id="promptText">${t.prompt}</div>
-      <div class="sub-label">Пример ответа AI</div>
+      <div class="sub-label">${L.exampleOut}</div>
       <div class="example-out"><pre style="margin:0;white-space:pre-wrap;font-family:inherit;">${t.out}</pre></div>
     </div>
 
     <div class="section-title">🤖 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Когда использовать</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор промпта</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как адаптировать под свой проект</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -541,9 +819,9 @@ function render(i){
   copyBtn.onclick = () => {
     const text = stripHtml(t.prompt);
     const showCopied = () => {
-      copyBtn.textContent = 'Copied ✓';
+      copyBtn.textContent = L.copied;
       copyBtn.classList.add('copied');
-      setTimeout(()=>{ copyBtn.textContent='Copy'; copyBtn.classList.remove('copied'); }, 1500);
+      setTimeout(()=>{ copyBtn.textContent=L.copy; copyBtn.classList.remove('copied'); }, 1500);
     };
     const fallbackCopy = () => {
       // works even without the Clipboard API (e.g. opening the file directly, not via http/https)
@@ -559,8 +837,8 @@ function render(i){
       document.body.removeChild(ta);
       if (ok) { showCopied(); }
       else {
-        copyBtn.textContent = 'Error';
-        setTimeout(()=>{ copyBtn.textContent='Copy'; }, 1500);
+        copyBtn.textContent = L.error;
+        setTimeout(()=>{ copyBtn.textContent=L.copy; }, 1500);
       }
     };
     if (navigator.clipboard && window.isSecureContext) {
@@ -571,7 +849,25 @@ function render(i){
   };
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

@@ -32,15 +32,23 @@
   }
   .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:20px;
     text-align:center;
@@ -168,7 +176,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -180,7 +188,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -221,24 +228,39 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
   <h1>Top 10 <span>Chrome DevTools</span></h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Инструменты браузера для ручного и исследовательского тестирования</div>
+  <div class="footer" id="pageFooter">Инструменты браузера для ручного и исследовательского тестирования</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+const allTabs = ["Elements","Console","Network","Application","Sources","Lighthouse"];
+
+const labels = {
+  ru: { back:"← На главную", footer:"Инструменты браузера для ручного и исследовательского тестирования",
+        what:"Для чего нужно", breakdown:"Разбор", custom:"Как применить в своей работе" },
+  en: { back:"← Home", footer:"Browser tools for manual and exploratory testing",
+        what:"When to use it", breakdown:"Breakdown", custom:"How to apply it in your work" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Elements", name:"Инспектор DOM и CSS", cat:"Интерфейс", tab:"Elements",
    body:`&lt;<span class="fn">button</span> <span class="jkey">class</span>=<span class="str">"btn btn-disabled"</span> <span class="jkey">disabled</span>&gt;
   Купить
@@ -399,13 +421,181 @@ SEO            <span class="status-ok">90</span>
    ],
    custom:"Включайте оба чекбокса по умолчанию, когда тестируете сценарий с переходом между страницами (логин → редирект на главную) или когда разработчик только что выкатил фикс, а баг 'всё ещё воспроизводится' — возможно, это просто старый кеш.",
    tip:"Если баг не воспроизводится, а коллега говорит 'у меня всё работает' — первое, что стоит проверить, это не отличается ли у вас состояние кеша/хранилища, а не код."}
-];
+],
+en: [
+  {cmd:"Elements", name:"DOM & CSS Inspector", cat:"UI", tab:"Elements",
+   body:`&lt;<span class="fn">button</span> <span class="jkey">class</span>=<span class="str">"btn btn-disabled"</span> <span class="jkey">disabled</span>&gt;
+  Buy
+&lt;/<span class="fn">button</span>&gt;
+
+<span class="com">/* styles */</span>
+.btn-disabled {
+  opacity: <span class="num">0.5</span>;
+  <span class="err">pointer-events: none;</span>
+}`,
+   what:"Shows the page's real HTML structure and applied CSS styles live. You can click any element on the page and instantly see its markup and styles — and temporarily tweak them right in the browser without touching the code.",
+   breakdown:[
+     {c:"Inspect (cursor icon)", e:"click an element on the page — DevTools instantly highlights it in the DOM tree"},
+     {c:"Styles panel", e:"the list of CSS rules applied to the element, showing where each rule comes from"},
+     {c:"double-click an attribute/text", e:"temporarily edit the HTML or CSS right in the browser to test a hypothesis"}
+   ],
+   custom:"If a button on <b>your</b> site looks inactive, open Elements, find its tag, and check the disabled attribute and the opacity/pointer-events CSS properties, like in the example — a common cause of a 'button doesn't respond' bug.",
+   tip:"Changes in Elements aren't saved and vanish on page reload — a safe way to test a hypothesis about a visual bug on the fly."},
+
+  {cmd:"Console", name:"JS Logs & Errors", cat:"Diagnostics", tab:"Console",
+   body:`<span class="err">Uncaught TypeError: Cannot read properties of undefined (reading 'name')</span>
+    at renderUser (app.js:142)
+
+<span class="warnline">⚠ Deprecated API used: document.write()</span>
+
+&gt; <span class="fn">document</span>.<span class="fn">title</span>
+<span class="str">"Checkout — MyShop"</span>`,
+   what:"Shows JavaScript errors and warnings happening on the page, and also lets you run arbitrary JS right in the context of the open page — useful for quick diagnostics and experiments.",
+   breakdown:[
+     {c:"red lines", e:"uncaught JS errors — often the actual technical reason a button or form 'doesn't work'"},
+     {c:"yellow lines", e:"warnings — don't break things immediately but flag potential problems"},
+     {c:"the line after &gt;", e:"a command typed manually into the console, and its result"}
+   ],
+   custom:"If something in <b>your</b> app silently fails with no visible error in the UI, open Console first — there's often already an explicit red error explaining the cause.",
+   tip:"Attach a Console screenshot to the bug report — the error text with a line number often points a developer straight to the cause."},
+
+  {cmd:"Network", name:"Network Requests", cat:"Diagnostics", tab:"Network",
+   table:[
+     ["Name","Status","Time"],
+     ["login","<span class='status-ok'>200</span>","240ms"],
+     ["user/42","<span class='status-ok'>200</span>","80ms"],
+     ["checkout","<span class='status-bad'>500</span>","1200ms"]
+   ],
+   what:"Shows every network request the page sends (API calls, images, scripts) with status codes, response times, and the full request/response content. The key tool for telling a frontend bug apart from a backend bug.",
+   breakdown:[
+     {c:"Status", e:"the HTTP response code — 2xx success, 4xx client error, 5xx server error"},
+     {c:"Time", e:"time from request sent to response received — helps find 'slow' requests"},
+     {c:"Headers / Payload / Response tabs", e:"clicking a request shows exactly what was sent and what the server returned"}
+   ],
+   custom:"If a form in <b>your</b> app 'doesn't save' — open Network, repeat the action, and look at the real status code and response body of that request, not just what the UI shows.",
+   tip:"Turn on the Preserve log checkbox if you're inspecting a request around a page navigation — otherwise Network clears on every navigation."},
+
+  {cmd:"Application", name:"Cookies & Storage", cat:"Diagnostics", tab:"Application",
+   body:`<span class="com">Local Storage → http://app.test</span>
+auth_token    eyJhbGciOi...
+cart_items    [{"id":12,"qty":2}]
+
+<span class="com">Cookies</span>
+session_id    s%3A8f2c... | HttpOnly | Secure`,
+   what:"Shows what the site stores locally in the browser: cookies, localStorage, sessionStorage, IndexedDB. Useful to check whether session/cart/settings data is actually saved where the requirements expect it to be.",
+   breakdown:[
+     {c:"Local Storage", e:"data saved by the site that persists until explicitly cleared — often tokens, UI settings"},
+     {c:"Session Storage", e:"the same, but cleared when the tab is closed"},
+     {c:"Cookies", e:"with HttpOnly (not accessible to JS, safer) and Secure (HTTPS only) flags"}
+   ],
+   custom:"Check that <b>your</b> app actually removes auth_token from Local Storage/Cookies after logout — a common security bug where 'logging out' only works in the UI while the token stays in storage.",
+   tip:"The 'Clear site data' button in this tab quickly simulates a user's 'first visit' without manually clearing the browser cache."},
+
+  {cmd:"Sources", name:"JS Debugging (breakpoints)", cat:"Diagnostics", tab:"Sources",
+   body:`<span class="com">app.js</span>
+140  function renderUser(user) {
+<span class="err">141▶ </span>  const name = user.profile.name;
+142    return name;
+143  }
+
+<span class="com">Scope → user = undefined</span>`,
+   what:"Lets you set a breakpoint on a specific line of JS code. When script execution reaches that line, it pauses — you can inspect the real values of variables at that moment, then step through the code one line at a time.",
+   breakdown:[
+     {c:"breakpoint (click a line number)", e:"execution stops right before this line the next time it runs"},
+     {c:"Scope panel", e:"shows the values of every variable available at this breakpoint"},
+     {c:"Step over / Step into", e:"keep executing code line by line, either 'entering' called functions or skipping over them"}
+   ],
+   custom:"If a bug in <b>your</b> app reproduces inconsistently, set a breakpoint at a suspicious spot in the code (a developer can suggest where) and see what data arrives at the moment it fails.",
+   tip:"This edges into a developer's territory, but it's useful for a tester as a way to write a precise report: 'the user variable comes back undefined at this point' — that kind of bug gets fixed faster."},
+
+  {cmd:"Device Toolbar", name:"Mobile Device Emulation", cat:"Responsiveness", tab:"Elements",
+   body:`<span class="com">Device: iPhone 12 Pro</span>
+390 × 844 · DPR: 3
+Throttling: Mid-tier mobile`,
+   what:"Switches the page's rendering to the dimensions of different devices (phones, tablets) right inside a desktop browser, with no real device required — a fast first check of responsive layout.",
+   breakdown:[
+     {c:"phone+tablet icon", e:"toggles device emulation mode (or Ctrl/Cmd+Shift+M)"},
+     {c:"Dimensions", e:"pick a specific device model or a custom resolution"},
+     {c:"DPR (Device Pixel Ratio)", e:"screen pixel density — affects how sharp images look"}
+   ],
+   custom:"Test <b>your</b> app on at least 2–3 characteristic resolutions: a small phone (375px), a tablet (768px), desktop — this catches most responsive-layout bugs without access to real devices.",
+   tip:"This emulates the layout, not a real device — critical scenarios still deserve a final check on an actual phone, especially for gestures and performance."},
+
+  {cmd:"Network Throttling", name:"Slow Network Emulation", cat:"Performance", tab:"Network",
+   body:`<span class="com">Throttling: Slow 3G</span>
+Download: 400 Kb/s
+Upload: 400 Kb/s
+Latency: 2000ms
+
+login — 4.2s (vs 240ms on a normal connection)`,
+   what:"Artificially slows down the page's network requests, emulating a poor connection (3G, slow Wi-Fi) or no connection at all — a check of how the app behaves outside ideal conditions.",
+   breakdown:[
+     {c:"Slow 3G / Fast 3G", e:"built-in presets with realistic speed and latency values"},
+     {c:"Offline", e:"fully simulates having no internet connection"},
+     {c:"Custom profile", e:"you can set your own speed/latency values for a specific test case"}
+   ],
+   custom:"Check on <b>your</b> app: does a loading indicator appear on a slow connection, what happens if the connection drops mid-form-submit — scenarios rarely tested on 'fast office Wi-Fi'.",
+   tip:"Combine with the Device Toolbar: a lot of mobile users genuinely deal with a slow connection, not just a small screen."},
+
+  {cmd:"Copy as cURL", name:"Export a Request", cat:"Diagnostics", tab:"Network",
+   body:`<span class="com">Right-click a request → Copy → Copy as cURL</span>
+
+curl <span class="str">'https://api.app.test/checkout'</span> \\
+  -H <span class="str">'authorization: Bearer eyJhbGciOi...'</span> \\
+  -H <span class="str">'content-type: application/json'</span> \\
+  --data-raw <span class="str">'{"items":[12]}'</span>`,
+   what:"Turns any request you see in Network into a ready-made curl command (or Python/JS/Node code) — you can reproduce the exact same request outside the browser: in a terminal, in Postman, in a bug report.",
+   breakdown:[
+     {c:"Right-click a request → Copy", e:"a context menu with export options: cURL (bash), cURL (cmd), as fetch()"},
+     {c:"included headers/cookies", e:"the exported command contains a real token/session — be careful when sharing it"}
+   ],
+   custom:"Found a bug in a specific API request in <b>your</b> app via Network? Copy it as cURL and paste it right into the bug report — a developer can reproduce it with one command, no retelling the steps in words.",
+   warn:"The exported command contains a real auth token — don't paste it into public/shared tickets without stripping sensitive data first."},
+
+  {cmd:"Lighthouse", name:"Performance Audit", cat:"Performance", tab:"Lighthouse",
+   body:`Performance    <span class="status-ok">82</span>
+Accessibility  <span class="status-bad">64</span>
+Best Practices <span class="status-ok">93</span>
+SEO            <span class="status-ok">90</span>
+
+⚠ Buttons do not have accessible names
+⚠ Image elements do not have [alt] attributes`,
+   what:"An automated page audit across several categories: performance, accessibility, best practices, SEO. It produces a 0–100 score and a concrete, explained list of issues.",
+   breakdown:[
+     {c:"Performance", e:"page load and render speed (time to interactive, etc.)"},
+     {c:"Accessibility", e:"how accessible the page is to people with disabilities (contrast, alt text, ARIA)"},
+     {c:"Generate report", e:"run the audit; best done in incognito mode with no extra extensions skewing the result"}
+   ],
+   custom:"Run Lighthouse on <b>your</b> site's key pages (home, product card, checkout) and file the accessibility issues it finds as separate bugs — rarely checked manually, but it matters for real users.",
+   tip:"Lighthouse results can vary between runs (depends on current machine load) — for reliable performance numbers, run it a few times."},
+
+  {cmd:"Preserve log & Disable cache", name:"Stable Debugging", cat:"Diagnostics", tab:"Network",
+   body:`☑ Preserve log
+☑ Disable cache (while DevTools is open)
+
+<span class="com">// without these checkboxes:</span>
+navigating to a page → Network clears
+stale JS from cache → an "unreproducible" bug`,
+   what:"Two checkboxes in Network that save a lot of debugging time: Preserve log stops the request list from clearing on page navigation, Disable cache forces the browser to always load fresh files instead of old cached versions.",
+   breakdown:[
+     {c:"Preserve log", e:"keeps the request history across redirects/navigations — otherwise you only see requests since the last navigation"},
+     {c:"Disable cache", e:"only works while DevTools is open — useful when JS/CSS edits visually 'don't apply'"}
+   ],
+   custom:"Turn both checkboxes on by default when testing a scenario that crosses a page navigation (login → redirect to home), or when a developer just shipped a fix and the bug 'still reproduces' — it might just be a stale cache.",
+   tip:"If a bug won't reproduce and a colleague says 'it works for me' — the first thing to check is whether your cache/storage state differs, not the code."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
-const allTabs = ["Elements","Console","Network","Application","Sources","Lighthouse"];
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -440,13 +630,13 @@ function render(i){
     <div class="section-title">🛠 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Для чего нужно</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -458,7 +648,24 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

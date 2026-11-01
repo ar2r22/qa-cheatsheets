@@ -31,15 +31,23 @@
   }
   .wrap{max-width:860px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:19px;
     text-align:center;
@@ -155,7 +163,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -167,7 +175,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -208,24 +215,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Git</span> для автоматизации тестирования</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Git</span> для автоматизации тестирования</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Git для фреймворков автотестов, CI/CD и совместной работы над кодом тестов</div>
+  <div class="footer" id="pageFooter">Git для фреймворков автотестов, CI/CD и совместной работы над кодом тестов</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>Git</span> для автоматизации тестирования',
+  en: 'Top 10 <span>Git</span> for Test Automation'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Git для фреймворков автотестов, CI/CD и совместной работы над кодом тестов",
+        what:"Для чего нужно", breakdown:"Разбор", custom:"Как применить в своём проекте" },
+  en: { back:"← Home", footer:"Git for test-automation frameworks, CI/CD, and collaborating on test code",
+        what:"When to use it", breakdown:"Breakdown", custom:"How to apply it in your project" }
+};
+
+const toolsData = {
+ru: [
   {cmd:".gitignore", name:"Исключить лишние файлы", cat:"Конфигурация",
    line:"cat .gitignore",
    out:"node_modules/\ntest-results/\nplaywright-report/\n*.log\n.env",
@@ -343,12 +369,138 @@ const tools = [
    ],
    custom:"Если <b>ваш</b> репозиторий с переиспользуемыми тестовыми утилитами публикуется как npm-пакет — настройте semantic-release и договоритесь с командой об едином формате сообщений коммитов, чтобы версии и changelog генерировались без ручной работы.",
    tip:"Даже без автоматизации версионирования, единый формат сообщений сильно упрощает чтение истории: сразу видно тип изменения, не открывая diff."}
-];
+],
+en: [
+  {cmd:".gitignore", name:"Excluding Clutter Files", cat:"Configuration",
+   line:"cat .gitignore",
+   out:"node_modules/\ntest-results/\nplaywright-report/\n*.log\n.env",
+   what:"A file listing paths Git should ignore and never offer to commit. For a test-automation framework, it's critical to exclude generated artifacts (reports, screenshots, dependencies) — otherwise the repo quickly bloats with junk.",
+   breakdown:[
+     {c:"node_modules/", e:"installed npm dependencies — recreated by npm install, no need to store them in git"},
+     {c:"test-results/, playwright-report/", e:"generated test-run reports — every run creates new ones"},
+     {c:"*.log", e:"an extension wildcard — ignore every log file"},
+     {c:".env", e:"a file with secrets/tokens — should never end up in the repository"}
+   ],
+   custom:"Create a .gitignore in the root of <b>your</b> test-automation repo and add your framework's report/screenshot folders (test-results, allure-results, cypress/videos, etc.) — the exact list depends on the tool you use.",
+   tip:"If a file was already committed BEFORE being added to .gitignore, the rule won't apply to it — you first need to run git rm --cached <file>."},
+
+  {cmd:"git tag", name:"Marking a Test Suite Version", cat:"Versioning",
+   line:"git tag -a v1.4.0 -m \"stable regression suite before release 3.2\"\ngit push origin v1.4.0",
+   out:"Tag v1.4.0 created\nTo github.com/team/qa-automation.git\n * [new tag]  v1.4.0 -> v1.4.0",
+   what:"A tag is a named label on a specific commit, usually marking a stable version. For a test-automation framework, it's handy to tag a state that's guaranteed 'green' before a release — so you can always come back to it.",
+   breakdown:[
+     {c:"-a v1.4.0", e:"create an annotated tag (with author, date, message) — preferable over a lightweight tag"},
+     {c:"-m \"...\"", e:"a message explaining what this version is"},
+     {c:"git push origin v1.4.0", e:"tags are NOT sent by a plain push by default — you need to push them explicitly"}
+   ],
+   custom:"Tag a commit in <b>your</b> test-automation repo right after the entire regression suite passes before a release — a reliable rollback point if later changes break something.",
+   tip:"git checkout v1.4.0 — temporarily switch to the code state at this tag, without creating a new branch."},
+
+  {cmd:"git rebase -i", name:"Cleaning Up Commit History", cat:"History",
+   line:"git rebase -i HEAD~4",
+   out:"pick a1b2c3d test: add login cases\nsquash e4f5g6h fix typo\nsquash h7i8j9k fix typo again\npick k0l1m2n test: add logout cases",
+   what:"Interactive rebase lets you rewrite the last N commits before sending them for review: merge small 'fix typo' commits into one, edit messages, reorder them. The result is a clean, readable history instead of chaotic small edits.",
+   breakdown:[
+     {c:"HEAD~4", e:"take the last 4 commits for editing"},
+     {c:"pick", e:"leave the commit as-is"},
+     {c:"squash", e:"merge this commit into the previous pick"},
+     {c:"reword", e:"keep the commit, but let you edit its message"}
+   ],
+   custom:"Before opening a Pull Request with new tests in <b>your</b> project, squash technical intermediate commits ('wip', 'fix typo') into one meaningful commit — makes it easier for a reviewer to follow the change.",
+   warn:"Never rebase commits that have already been pushed and seen/pulled by others — it rewrites history and breaks their local copies."},
+
+  {cmd:"git cherry-pick", name:"Moving a Single Commit", cat:"History",
+   line:"git cherry-pick a93e7c1",
+   out:"[hotfix/release-3.2 f0a1b2c] fix: checkout null pointer\n 1 file changed, 3 insertions(+)",
+   what:"Applies one specific commit from another branch onto the current one, without merging the whole branch. Useful when a needed test or fixture fix is already sitting in one branch, but you only need that one piece, not all its other unfinished changes.",
+   breakdown:[
+     {c:"a93e7c1", e:"the hash of the commit to move over (grab it from git log)"}
+   ],
+   custom:"If an important test-fixture fix in <b>your</b> repo ended up in a branch with an unfinished feature, but you urgently need it in a hotfix branch, cherry-pick moves over exactly that commit, leaving everything else alone.",
+   tip:"If the source branch has further changes after that commit, cherry-pick only takes the one you specified, nothing more."},
+
+  {cmd:"Git hooks", name:"Automatic Pre-commit Checks", cat:"Automation",
+   line:"cat .git/hooks/pre-commit",
+   out:"#!/bin/sh\nnpx eslint . || exit 1\nnpx tsc --noEmit || exit 1",
+   what:"A hook is a script Git runs automatically on a specific event (before a commit, before a push, etc.). A pre-commit hook can run a linter or a type check and block the commit if they fail — catching mistakes before they ever reach the repository.",
+   breakdown:[
+     {c:"pre-commit", e:"fires before a commit is created; a non-zero exit code from the script cancels the commit"},
+     {c:"exit 1", e:"an explicit error code — this is what actually stops the commit when a check fails"},
+     {c:"pre-push", e:"a similar hook, but fires before pushing to a remote — often used to run the actual test suite"}
+   ],
+   custom:"For <b>your</b> test-automation framework, set up a pre-commit hook (manually, or via a package like Husky) that runs a linter and a type check on changed files — catches typos in tests before code review.",
+   tip:"Husky is the most popular way to manage git hooks in JS/TS projects without manually editing .git/hooks."},
+
+  {cmd:"git worktree", name:"Several Branches at Once", cat:"Advanced",
+   line:"git worktree add ../qa-automation-release release/3.2",
+   out:"Preparing worktree (checking out 'release/3.2')\nHEAD is now at 8f2c1a0 release 3.2 freeze",
+   what:"Lets you have a separate working folder for another branch of the same repository, with no re-cloning — e.g. running regression on a release branch while writing new tests in main at the same time, with no switching back and forth.",
+   breakdown:[
+     {c:"worktree add", e:"create a new working folder linked to an existing repository"},
+     {c:"../qa-automation-release", e:"the path where this extra working copy gets created"},
+     {c:"release/3.2", e:"the branch that gets checked out into this folder"}
+   ],
+   custom:"If <b>your</b> project needs to run automated tests on two different branches at once (e.g. the current release and the next one), worktree saves you from constant git checkout and dependency reinstalls every time you switch.",
+   tip:"git worktree list shows every extra working folder created; git worktree remove <path> removes one you no longer need."},
+
+  {cmd:"git submodule", name:"A Shared Framework Across Projects", cat:"Advanced",
+   line:"git submodule add https://github.com/team/shared-test-utils.git libs/shared-utils\ngit submodule update --init --recursive",
+   out:"Cloning into 'libs/shared-utils'...\nSubmodule path 'libs/shared-utils': checked out '3fae2c1'",
+   what:"Plugs one git repository into another as a separate subfolder with its own independent history — handy when shared test-automation utilities (e.g. custom matchers or fixtures) are used across several projects at once.",
+   breakdown:[
+     {c:"git submodule add &lt;url&gt; &lt;path&gt;", e:"plug an external repository in as a submodule at the given path"},
+     {c:"submodule update --init --recursive", e:"the command to run after cloning the main repository, to pull down the submodules' contents"}
+   ],
+   custom:"If <b>your</b> team has a shared test-utilities library reused across several automation repos, pull it out into a separate repository and plug it in as a submodule instead of manually copying code.",
+   warn:"Submodules need separate commands (update --init --recursive) after a regular clone — new team members often forget this step, which is worth spelling out explicitly in the README."},
+
+  {cmd:"merge vs rebase", name:"Branch-merging Strategies", cat:"History",
+   line:"git merge feature/new-tests\n# or:\ngit rebase main",
+   out:"merge: creates a merge commit, history branches\nrebase: replays commits on top of main, history stays linear",
+   what:"Two different ways to combine changes from one branch into another. merge preserves the real branching history (with 'forks'), rebase rewrites commits as if they'd been made on top of the current main — history stays linear, but the commits' hashes change.",
+   breakdown:[
+     {c:"git merge &lt;branch&gt;", e:"merge the given branch into the current one, creating a merge commit (if there were divergences)"},
+     {c:"git rebase &lt;branch&gt;", e:"replay the current branch's commits on top of the given one — history becomes a straight line"}
+   ],
+   custom:"In <b>your</b> project, it's safe to use rebase on personal test-automation branches (not yet opened as a Pull Request) to keep history clean; once others have seen the branch, switch to merge so you don't rewrite shared history.",
+   tip:"There's no single 'correct' choice — what matters is that the whole team follows the same agreement, or the repo's history becomes unpredictable."},
+
+  {cmd:"git remote", name:"Fork + Upstream", cat:"Collaboration",
+   line:"git remote add upstream https://github.com/original-team/qa-automation.git\ngit fetch upstream\ngit merge upstream/main",
+   out:"From github.com/original-team/qa-automation\n * [new branch]  main -> upstream/main",
+   what:"When you're working from a fork (your own copy) of a shared repository, upstream is a link to the original repo. This lets you pull changes from the original into your fork without losing the connection to the 'source'.",
+   breakdown:[
+     {c:"git remote add upstream &lt;url&gt;", e:"add a second remote named upstream (origin stays your fork)"},
+     {c:"git fetch upstream", e:"download changes from the original repository"},
+     {c:"git remote -v", e:"list every configured remote and its address"}
+   ],
+   custom:"If you contribute to <b>your</b> company's shared open-source test-automation framework through a fork, set up upstream once at the start, then regularly pull current changes from it.",
+   tip:"origin is 'your' remote (the fork you push to), upstream is the original one you only pull from."},
+
+  {cmd:"Conventional Commits", name:"A Message Format for CI", cat:"CI/CD",
+   line:"git commit -m \"test(checkout): add coupon edge cases\"\ngit commit -m \"fix(ci): retry flaky network test\"",
+   out:"semantic-release: parsing commit → type=fix → bump patch version",
+   what:"A strict commit-message format (type: description) that CI tools can parse automatically — e.g. semantic-release uses it to figure out whether to bump the version of a test-utilities package and auto-generate a changelog.",
+   breakdown:[
+     {c:"test(checkout): ...", e:"type test — tests were added/changed, with the affected area in parentheses"},
+     {c:"fix(ci): ...", e:"type fix — a bug fix; by convention it bumps the PATCH version on an automated release"},
+     {c:"feat(...): ...", e:"type feat — a new feature, bumps the MINOR version"}
+   ],
+   custom:"If <b>your</b> repo of reusable test utilities is published as an npm package, set up semantic-release and agree on a shared commit-message format with the team, so versions and the changelog are generated without manual work.",
+   tip:"Even without automated versioning, a consistent message format makes history far easier to read — the type of change is visible immediately, with no need to open a diff."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -385,13 +537,13 @@ function render(i){
     <div class="section-title">⚙️ ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Для чего нужно</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своём проекте</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -403,7 +555,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

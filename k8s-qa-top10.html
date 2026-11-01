@@ -32,15 +32,23 @@
   }
   .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:19px;
     text-align:center;
@@ -175,7 +183,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -187,7 +195,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -228,24 +235,45 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Kubernetes</span> для тестировщика</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Kubernetes</span> для тестировщика</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">kubectl + Lens — основы для тестирования сервисов в кластере</div>
+  <div class="footer" id="pageFooter">kubectl + Lens — основы для тестирования сервисов в кластере</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>Kubernetes</span> для тестировщика',
+  en: 'Top 10 <span>Kubernetes</span> for Testers'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"kubectl + Lens — основы для тестирования сервисов в кластере",
+        what:"Что это", breakdown:"Ключевые понятия", custom:"Как применить в своей работе",
+        inLens:"🔭 В Lens:", kubectlEquiv:"Эквивалент в kubectl" },
+  en: { back:"← Home", footer:"kubectl + Lens — the basics for testing services in a cluster",
+        what:"What it is", breakdown:"Key concepts", custom:"How to apply it in your work",
+        inLens:"🔭 In Lens:", kubectlEquiv:"kubectl equivalent" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Port-forward", name:"Проброс порта до сервиса", cat:"Доступ", kind:"lens",
    lens:[
      ["1","Открыть кластер в Lens → раздел Workloads → Pods"],
@@ -374,12 +402,149 @@ const tools = [
    ],
    custom:"Если вы часто взаимодействуете с <b>вашим</b> тестовым кластером (смотрите логи, пробрасываете порты по нескольку раз в день) — поставьте Lens: команды из карточек выше делаются там в 1-2 клика, без необходимости помнить синтаксис kubectl.",
    tip:"Понимание того, ЧТО делает Lens под капотом (какую именно команду kubectl он вызывает за вас) всё равно полезно — пригодится, если понадобится доступ к кластеру с машины, где Lens не установлен (например через SSH)."}
-];
+],
+en: [
+  {cmd:"Port-forward", name:"Port-forwarding to a Service", cat:"Access", kind:"lens",
+   lens:[
+     ["1","Open the cluster in Lens → the Workloads → Pods section"],
+     ["2","Find the pod for the service you need, e.g. orders-service-7d9f8"],
+     ["3","Right-click → Port Forward → specify a local port (e.g. 8080 → 8080)"],
+     ["4","Lens keeps the forward active as long as this window stays open"]
+   ],
+   cliLine:"kubectl port-forward pod/orders-service-7d9f8 8080:8080 -n staging",
+   cliOut:"Forwarding from 127.0.0.1:8080 -> 8080\nForwarding from [::1]:8080 -> 8080",
+   what:"Port-forwarding creates a temporary tunnel from your local machine straight into a pod inside the cluster — a service that's normally unreachable from outside (no Ingress/external IP) becomes available on localhost. This is the most common way for QA to reach a service in a private cluster without standing up their own environment.",
+   breakdown:[
+     {c:"pod/orders-service-7d9f8", e:"the specific pod you're forwarding a port to (you can also use deployment/... or service/...)"},
+     {c:"8080:8080", e:"local_port:port_in_pod — they don't have to match, e.g. 9000:8080"},
+     {c:"-n staging", e:"the namespace the pod lives in — without it, kubectl looks in default"}
+   ],
+   custom:"Swap the pod name for the real name of <b>your</b> service under test — its exact name (with a random suffix) is visible in the pod list (see the 'kubectl get pods' card). Once forwarded, access the service as plain localhost:8080 — in Postman, a browser, curl.",
+   tip:"A pod can restart and get a new name — if the forward suddenly drops with an error, just recreate it for the new pod name, or forward via service/orders-service instead, since that name is stable."},
+
+  {cmd:"kubectl get pods", name:"Pod Status", cat:"Diagnostics", kind:"cli",
+   cliLine:"kubectl get pods -n staging",
+   cliOut:"NAME                          READY   STATUS             RESTARTS   AGE\norders-service-7d9f8          1/1     Running            0          2d\npayment-service-4a1c2         0/1     CrashLoopBackOff   14         3h",
+   what:"Lists pods in a namespace and their current state — alive or not, how many restarts, what status. The first command for quickly checking 'is the service even up and running?' before testing its functionality.",
+   breakdown:[
+     {c:"READY 1/1", e:"how many containers inside the pod are ready out of the total — 1/1 means everything's fine"},
+     {c:"STATUS: Running", e:"the pod is operating normally"},
+     {c:"STATUS: CrashLoopBackOff", e:"the container keeps crashing and Kubernetes keeps trying to restart it"},
+     {c:"RESTARTS", e:"how many times the pod has restarted — a large number is almost always a sign of trouble"}
+   ],
+   custom:"Before filing a 'feature doesn't work' bug in <b>your</b> test environment, check kubectl get pods — if the service is in CrashLoopBackOff, this isn't a business-logic bug, the service never came up at all.",
+   tip:"kubectl get pods -w (watch) shows pod status changes live — handy for watching a restart/deploy happen right during a test."},
+
+  {cmd:"kubectl logs", name:"Container Logs", cat:"Diagnostics", kind:"cli",
+   cliLine:"kubectl logs orders-service-7d9f8 -n staging --tail=50 -f",
+   cliOut:"2026-10-29 12:40:01 INFO  Starting application\n2026-10-29 12:40:03 INFO  Connected to DB\n2026-10-29 12:41:15 ERROR Payment timeout for order 1051",
+   what:"Prints the application's logs inside a specific pod — the same standard output (stdout/stderr) a developer would see running the app locally. The main way to understand a problem's cause without access to the code.",
+   breakdown:[
+     {c:"--tail=50", e:"show only the last 50 lines, not the whole accumulated log"},
+     {c:"-f (follow)", e:"keep printing new lines live — the equivalent of tail -f"},
+     {c:"-p (previous)", e:"show the logs from the PREVIOUS container run — critical for CrashLoopBackOff, when the current pod has already restarted and there are no fresh logs yet"}
+   ],
+   custom:"Run the logs with -f in a separate window before reproducing a bug in <b>your</b> test environment — just like tail -f on regular Linux, only for a container inside the cluster.",
+   tip:"In Lens, logs are available right in the UI: click a pod → the Logs tab — you don't even need to remember the command, especially handy when a pod has several containers and you need to pick the right one."},
+
+  {cmd:"kubectl exec", name:"A Shell Inside the Container", cat:"Diagnostics", kind:"cli",
+   cliLine:"kubectl exec -it orders-service-7d9f8 -n staging -- sh",
+   cliOut:"/app # env | grep DB_\nDB_HOST=postgres.staging.svc.cluster.local\nDB_PORT=5432",
+   what:"Opens an interactive session (like regular SSH) right inside a running container — you can check environment variables, inspect config files, manually curl a neighboring service from inside the cluster.",
+   breakdown:[
+     {c:"-it", e:"interactive mode with a terminal (interactive + tty) — without it, the command just runs and exits"},
+     {c:"-- sh", e:"which command/shell to run inside the container (sh is more commonly available than bash in minimal images)"},
+     {c:"-c &lt;name&gt;", e:"if the pod has MULTIPLE containers, you need to explicitly say which one to enter"}
+   ],
+   custom:"If you suspect a wrong environment variable or config value in <b>your</b> app, exec into the pod and check its real value (env | grep ...) instead of guessing from external behavior.",
+   warn:"exec'ing into a pod is direct interference with a running container — don't change files there 'permanently': any edits vanish on the next restart/recreation of the pod, and this is no substitute for a proper deploy."},
+
+  {cmd:"ConfigMap & Secret", name:"Service Configuration", cat:"Configuration", kind:"cli",
+   cliLine:"kubectl get configmap orders-config -n staging -o yaml",
+   cliOut:"data:\n  FEATURE_NEW_CHECKOUT: \"true\"\n  MAX_RETRY_COUNT: \"3\"",
+   what:"A ConfigMap stores non-sensitive app settings (feature flags, limits, URLs) as plain text; a Secret is the same thing for sensitive data (passwords, tokens), with values base64-encoded. Both get wired into a pod as environment variables or files.",
+   breakdown:[
+     {c:"kubectl get configmap -o yaml", e:"view every key and value of a specific ConfigMap"},
+     {c:"kubectl get secret -o yaml", e:"the same for a Secret — but you'll need to additionally decode the values from base64"},
+     {c:"FEATURE_NEW_CHECKOUT", e:"a typical example of a feature flag controlling app behavior with no code rebuild"}
+   ],
+   custom:"If a feature in <b>your</b> test environment 'won't turn on', check the real value of the matching flag in the ConfigMap — it may simply be off in staging, and the bug has nothing to do with it.",
+   tip:"In Lens, ConfigMaps and Secrets are separate sections under the Config menu — you can see the values visually, with no manual base64 decoding for Secrets; Lens does it for you."},
+
+  {cmd:"kubectl rollout restart", name:"Restarting After Config Changes", cat:"Management", kind:"cli",
+   cliLine:"kubectl rollout restart deployment/orders-service -n staging",
+   cliOut:"deployment.apps/orders-service restarted\n\nkubectl rollout status deployment/orders-service\nWaiting for rollout to finish: 1 old replicas pending termination...",
+   what:"Recreates a deployment's pods one by one (with no downtime for the whole service) — needed, for instance, after a ConfigMap/Secret changes, since that alone doesn't trigger an automatic restart of the pods using it.",
+   breakdown:[
+     {c:"rollout restart deployment/...", e:"kicks off a smooth restart: new pods come up, old ones are shut down in turn"},
+     {c:"rollout status", e:"watch the restart's progress — when the new pods are actually ready to take traffic"}
+   ],
+   custom:"If you changed a value in <b>your</b> service's ConfigMap to test a feature flag and nothing changed, you probably need a rollout restart: most apps read environment variables only at startup, not 'live'.",
+   tip:"In Lens, the same thing is done with a 'Restart' button on the deployment's page — no need to remember the command for a routine operation."},
+
+  {cmd:"Pod / Deployment / Service", name:"The Basic Objects", cat:"Basics", kind:"table",
+   table:[
+     ["Object","What it is"],
+     ["Pod","one running instance of a container(s) — the 'live' unit of the app"],
+     ["Deployment","a description of the desired state: how many Pod replicas there should be, which image to use"],
+     ["Service","a stable network address that balances traffic across pods (pods come and go, a Service stays put)"]
+   ],
+   what:"Three basic objects you need to be able to tell apart to find your way around a cluster. A Deployment manages pods (how many, and what version), a Pod is a real running instance, and a Service is the stable entry point hiding behind those pods.",
+   breakdown:[
+     {c:"A Pod is ephemeral", e:"it can be deleted and recreated at any moment (e.g. on a deploy) — it gets a new, random name"},
+     {c:"A Deployment tracks the count", e:"if a Pod dies, the Deployment automatically creates a new one to replace it"},
+     {c:"A Service doesn't change", e:"its DNS name (orders-service.staging.svc.cluster.local) stays stable even as the pods behind it change"}
+   ],
+   custom:"When port-forwarding or checking logs in <b>your</b> cluster, remember that a specific pod's name will change after the next deploy — if you need a stable address for regular use, forward a port to service/orders-service instead of a specific Pod.",
+   tip:"In Lens, the cluster's structure is laid out visually under these same categories in the left menu (Workloads → Pods / Deployments, Network → Services) — a direct reflection of Kubernetes terminology."},
+
+  {cmd:"kubectl scale", name:"Changing the Replica Count", cat:"Management", kind:"cli",
+   cliLine:"kubectl scale deployment/orders-service --replicas=3 -n staging",
+   cliOut:"deployment.apps/orders-service scaled\n\nNAME             READY   AGE\norders-service   3/3     12s",
+   what:"Manually changes how many replicas (pods) a deployment runs. Useful for testing horizontal scaling: checking that requests really are distributed across several instances, or temporarily scaling down to 0 to simulate a service being fully unavailable.",
+   breakdown:[
+     {c:"--replicas=3", e:"the desired number of pods — Kubernetes creates missing ones or removes extras on its own"},
+     {c:"--replicas=0", e:"effectively 'turns off' the service while leaving its configuration untouched — handy for testing how dependent services behave on full unavailability"}
+   ],
+   custom:"To test resilience in <b>your</b> system, temporarily scale a dependent service to 0 replicas in a test environment and watch how the main service handles its unavailability (see also the Circuit Breaker cards from the microservices topic).",
+   warn:"If HPA (autoscaling) is configured on the cluster, it may automatically bring the replica count back to its calculated value shortly after your manual scale — you may need to temporarily disable HPA for a stable unavailability test."},
+
+  {cmd:"Namespace", name:"Environment Isolation", cat:"Basics", kind:"cli",
+   cliLine:"kubectl get namespaces",
+   cliOut:"NAME         STATUS   AGE\ndefault      Active   180d\nstaging      Active   120d\nqa-feature-42   Active   2h",
+   what:"A Namespace is a logical 'partition' inside one cluster, separating resources for different environments or teams (staging, qa, prod-like test stands). The same service names can exist independently in different namespaces.",
+   breakdown:[
+     {c:"kubectl get namespaces", e:"list every namespace available in the cluster"},
+     {c:"-n &lt;namespace&gt;", e:"a flag you need to add to almost every command above — without it, kubectl looks in default"},
+     {c:"kubectl config set-context --current --namespace=qa-feature-42", e:"change the 'default' namespace for the current session, so you don't have to type -n every time"}
+   ],
+   custom:"Confirm the exact namespace name for <b>your</b> test environment with DevOps/your lead — large clusters often have several similarly-named ones (staging, qa, qa-feature-branch-X), and mixing them up is a common cause of 'I'm testing, but I don't see my changes'.",
+   tip:"In Lens, the current namespace is picked from a dropdown at the top — switching there means you don't have to keep it in mind for every command."},
+
+  {cmd:"Lens / k9s", name:"Graphical Tools", cat:"Tools", kind:"cli",
+   cliLine:"# a graphical equivalent of many of the commands above",
+   cliOut:"Lens: a desktop app — cluster tree, logs, exec,\n      port-forward — all by clicking, no terminal needed\n\nk9s: similar functionality, but right in the terminal (TUI)",
+   what:"Lens and k9s are tools that visualize a Kubernetes cluster so you don't have to keep dozens of kubectl commands in your head. Lens is a full desktop app with a GUI; k9s offers similar capabilities but runs right in the terminal.",
+   breakdown:[
+     {c:"Lens", e:"a tree of namespaces → pods → deployments; a click opens logs/exec/port-forward in a couple of clicks"},
+     {c:"k9s", e:"for those who prefer the terminal — the same navigation, but by keyboard, no mouse"},
+     {c:"both read the same kubeconfig", e:"as regular kubectl — no separate access setup needed if kubectl is already connected to the cluster"}
+   ],
+   custom:"If you interact with <b>your</b> test cluster often (checking logs, forwarding ports several times a day), install Lens: the commands from the cards above take 1-2 clicks there, with no need to remember kubectl syntax.",
+   tip:"Understanding WHAT Lens does under the hood (exactly which kubectl command it runs for you) is still useful — it'll help if you ever need cluster access from a machine without Lens installed, e.g. over SSH."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -400,10 +565,10 @@ function render(i){
     bodyHTML = `
       <div class="term-body">
         <div class="lens-ui">
-          <div style="color:var(--cyan);font-weight:700;margin-bottom:6px;">🔭 В Lens:</div>
+          <div style="color:var(--cyan);font-weight:700;margin-bottom:6px;">${L.inLens}</div>
           ${stepsHTML}
         </div>
-        <div style="margin-top:10px;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;">Эквивалент в kubectl</div>
+        <div style="margin-top:10px;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;">${L.kubectlEquiv}</div>
         <div style="margin-top:4px;"><span class="prompt">~$</span> <span class="cmdline">${t.cliLine}</span></div>
         <div class="out">${t.cliOut}</div>
       </div>`;
@@ -433,13 +598,13 @@ function render(i){
     <div class="section-title">☸️ ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Что это</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Ключевые понятия</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -451,7 +616,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

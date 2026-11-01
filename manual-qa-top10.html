@@ -31,15 +31,23 @@
   }
   .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:23px;
     text-align:center;
@@ -153,7 +161,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -165,7 +173,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -205,24 +212,38 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Manual Testing</span></h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Manual Testing</span></h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Основы ручного тестирования · для начинающих QA</div>
+  <div class="footer" id="pageFooter">Основы ручного тестирования · для начинающих QA</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const labels = {
+  ru: { back:"← На главную", footer:"Основы ручного тестирования · для начинающих QA",
+        what:"Что это", breakdown:"Из чего состоит", custom:"Как применить в своём проекте" },
+  en: { back:"← Home", footer:"Manual testing fundamentals · for beginner QA engineers",
+        what:"What it is", breakdown:"What it consists of", custom:"How to apply it in your project" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Test Case", name:"Тест-кейс", cat:"Проектирование",
    rows:[["ID","TC-014"],["Шаги","1. Открыть форму логина\n2. Ввести valid user/pass\n3. Нажать 'Войти'"],["Ожидаемо","Переход на главную страницу"]],
    out:"Статус: PASS",
@@ -338,12 +359,136 @@ const tools = [
    ],
    custom:"Для <b>вашего</b> проекта начните с малого: одна страница с разделами Scope / Сроки / Риски уже работает как мини тест-план для небольшой фичи.",
    tip:"Тест-план не обязан быть длинным документом — для маленькой команды достаточно пары абзацев, лишь бы было явно зафиксировано, что именно проверяется."}
-];
+],
+en: [
+  {cmd:"Test Case", name:"Test Case", cat:"Design",
+   rows:[["ID","TC-014"],["Steps","1. Open the login form\n2. Enter a valid user/pass\n3. Click 'Log in'"],["Expected","Navigate to the home page"]],
+   out:"Status: PASS",
+   what:"A test case is a step-by-step instruction with clear actions and an expected result. It lets any tester (or you yourself a month later) repeat the check the same way every time and clearly tell whether it passed.",
+   breakdown:[
+     {c:"Preconditions", e:"what must be ready before you start (e.g. the user is already registered)"},
+     {c:"Steps", e:"numbered actions — the more specific, the fewer ways to misread them"},
+     {c:"Expected result", e:"what the system should show/do if everything works correctly"}
+   ],
+   custom:"Swap the login form for a screen/feature in <b>your</b> app. For every case, ask yourself: 'Could someone else run this without knowing the product at all?' — if not, the steps need more detail.",
+   tip:"Write one test case = one thing being checked. That makes it far easier to pinpoint the cause when it fails."},
+
+  {cmd:"Bug Report", name:"Bug Report", cat:"Documentation",
+   rows:[["Title","'Buy' button is inactive with a valid cart"],["Severity","High"],["Priority","P2"]],
+   out:"Steps: 1. Add an item\n2. Go to the cart\n3. Click 'Buy' → the button doesn't respond",
+   what:"A bug report is a formal description of a problem you found, written so a developer can reproduce and fix it without having to come back and ask you questions.",
+   breakdown:[
+     {c:"Title", e:"short and specific: what's broken and under what conditions"},
+     {c:"Steps to reproduce", e:"the smallest set of actions that reliably triggers the bug"},
+     {c:"Actual / expected result", e:"what actually happened vs what should have happened"},
+     {c:"Environment", e:"browser/OS/app version — bugs are often environment-specific"}
+   ],
+   custom:"Fill in real steps and screenshots from <b>your</b> app under test. Always reproduce a bug at least twice before filing it — 'can't reproduce' wastes the whole team's time.",
+   tip:"Attach a screenshot or screen recording — it cuts the back-and-forth with a developer dramatically."},
+
+  {cmd:"Exploratory", name:"Exploratory Testing", cat:"Technique",
+   rows:[["Charter","Check catalog filter behavior with no pre-written cases"],["Time","30 minutes"]],
+   out:"Found: the 'price from-to' filter doesn't reset when the category changes",
+   what:"Simultaneously learning the product and testing it with no pre-written script — you explore the system, forming 'what if...' hypotheses on the fly.",
+   breakdown:[
+     {c:"Charter", e:"a short session goal — an area to explore, not an exact scenario"},
+     {c:"Time-box", e:"a time limit (usually 30–90 minutes) that keeps the session focused"},
+     {c:"Notes as you go", e:"capturing findings and ideas for new checks right during the session"}
+   ],
+   custom:"Pick the module of <b>your</b> product with the least formal test-case coverage and explore exactly that — that's where findings will be most valuable.",
+   tip:"A great complement to formal test cases: it catches bugs at the seams between features that cases often miss."},
+
+  {cmd:"Equivalence", name:"Equivalence Partitioning", cat:"Technique",
+   rows:[["Field","Age (allowed 18–65)"],["Classes","<18 (invalid) | 18–65 (valid) | >65 (invalid)"]],
+   out:"It's enough to check one value from each class",
+   what:"A test-design technique: input data is split into groups ('classes') where the system should behave the same way. Instead of trying every value, you only need to check one representative from each class.",
+   breakdown:[
+     {c:"Valid class", e:"values the system should accept"},
+     {c:"Invalid class", e:"values the system should reject (with a clear error)"},
+     {c:"Class representative", e:"a single value from the group, checked in place of all of them"}
+   ],
+   custom:"Take any input field in <b>your</b> app (email, item quantity, a coupon) and find its real limits — often spelled out in the requirements or the validation code.",
+   tip:"Sharply reduces the number of test cases without losing coverage quality — a core technique when testing time is limited."},
+
+  {cmd:"Boundary Value", name:"Boundary Value Analysis", cat:"Technique",
+   rows:[["Range","1–100 (item quantity)"],["Check","0, 1, 2, 99, 100, 101"]],
+   out:"Bug: entering 0 still adds the item to the cart",
+   what:"A technique based on an observation: bugs hide at the edges of ranges far more often than in the middle. You test values exactly on the boundary and just past it.",
+   breakdown:[
+     {c:"min-1 / min / min+1", e:"a value just below, exactly on, and just above the boundary"},
+     {c:"max-1 / max / max+1", e:"the same for the upper boundary"}
+   ],
+   custom:"For any constrained field in <b>your</b> app (password length, transfer amount, a date), write out exactly these 6 values and test them separately from the 'normal' cases.",
+   tip:"Use it together with equivalence partitioning — the classic pairing of techniques in manual testing."},
+
+  {cmd:"Smoke Test", name:"Smoke Testing", cat:"Strategy",
+   rows:[["When","Right after a new build"],["We check","Login, home page, checkout"]],
+   out:"Build status: STABLE — safe to keep testing",
+   what:"A quick, shallow check of the most critical functions right after a new build lands — to decide whether full testing is worth the time, or the build is simply broken.",
+   breakdown:[
+     {c:"Smoke case set", e:"5–15 of the product's most critical scenarios (not the whole app!)"},
+     {c:"Fast execution", e:"usually takes 10–30 minutes, no more"}
+   ],
+   custom:"Write down the 5–10 actions without which <b>your</b> product is pointless to use at all (e.g. log in, place an order, pay) — that's your smoke set.",
+   tip:"If the smoke test fails, send the build straight back to developers — testing further is pointless."},
+
+  {cmd:"Regression", name:"Regression Testing", cat:"Strategy",
+   rows:[["Trigger","Fixed a bug in the cart"],["Re-checking","Checkout, promo codes, delivery"]],
+   out:"Existing features weren't broken by the change",
+   what:"Re-checking already-tested features after a code change — to make sure fixing one bug or shipping a new feature didn't break something that used to work.",
+   breakdown:[
+     {c:"Regression set", e:"a set of cases covering the key/frequently-breaking areas of the product"},
+     {c:"Blast radius of the change", e:"modules logically connected to the changed code — check these first"}
+   ],
+   custom:"After any fix in <b>your</b> project, check not just the bug itself but neighboring features in the same module — bugs love to spread.",
+   tip:"Recurring regression runs are the first candidates for automation if you're still doing them by hand every release."},
+
+  {cmd:"Checklist", name:"Checklist", cat:"Design",
+   rows:[["Section","Registration form"],["Items","☐ Email validation\n☐ Password is masked\n☐ Button disabled when fields are empty"]],
+   out:"7 of 10 items passed",
+   what:"A lighter alternative to detailed test cases: a list of short check items with no rigidly written-out steps — faster to write, faster to run.",
+   breakdown:[
+     {c:"Checklist item", e:"one thing to check, in one line, with no step-by-step detail"},
+     {c:"Grouping by section", e:"checklists are easy to split by screen/feature of the product"}
+   ],
+   custom:"Build a checklist for a specific screen in <b>your</b> app — note the UI details, validations, and error handling worth checking on every release.",
+   tip:"Checklists are great for frequent quick checks; test cases are for complex scenarios where exact repeatability matters."},
+
+  {cmd:"Severity/Priority", name:"Severity & Priority", cat:"Documentation",
+   rows:[["Severity","Critical (the whole app crashes)"],["Priority","P1 (fix immediately)"]],
+   out:"Severity = technical impact, Priority = urgency to fix",
+   what:"Two independent characteristics of a bug. Severity is how badly it breaks the system technically. Priority is how urgently it needs fixing from a business standpoint. They don't always match.",
+   breakdown:[
+     {c:"Severity: Critical/High/Medium/Low", e:"how critical the breakage is (a crash, data loss vs a text typo)"},
+     {c:"Priority: P1–P4", e:"fix order, usually set by a manager or lead"}
+   ],
+   custom:"Classic mismatch: a typo in the homepage logo (Severity: Low) can still be Priority: P1, because every single user sees it immediately.",
+   tip:"Never set Priority yourself without agreement, unless that's accepted practice on your team — it's a management call."},
+
+  {cmd:"Test Plan", name:"Test Plan", cat:"Strategy",
+   rows:[["Scope","Payment module (release 2.4)"],["Out of scope","Push notifications (another team)"],["Timeline","3 working days"]],
+   out:"Document agreed with the team before testing starts",
+   what:"A top-level document: exactly what will be tested, with which methods, on what timeline, who's responsible, and what the risks are. It sets the overall strategy before you write specific test cases.",
+   breakdown:[
+     {c:"Scope / Out of scope", e:"what you're checking and what you're explicitly NOT checking this cycle"},
+     {c:"Approach", e:"which techniques and types of testing will be used"},
+     {c:"Exit criteria", e:"when testing counts as done (e.g. zero critical bugs)"}
+   ],
+   custom:"For <b>your</b> project, start small: a single page with Scope / Timeline / Risks sections already works as a mini test plan for a small feature.",
+   tip:"A test plan doesn't have to be a long document — for a small team, a couple of paragraphs is enough, as long as what's being checked is written down clearly."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -378,13 +523,13 @@ function render(i){
     <div class="section-title">📋 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Что это</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Из чего состоит</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своём проекте</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -396,7 +541,24 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

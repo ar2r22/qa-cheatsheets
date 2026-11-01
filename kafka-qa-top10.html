@@ -32,15 +32,23 @@
   }
   .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:20px;
     text-align:center;
@@ -164,7 +172,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -176,7 +184,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -217,24 +224,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Kafka</span> для тестировщика</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Kafka</span> для тестировщика</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Основы работы с Kafka для тестирования event-driven систем</div>
+  <div class="footer" id="pageFooter">Основы работы с Kafka для тестирования event-driven систем</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>Kafka</span> для тестировщика',
+  en: 'Top 10 <span>Kafka</span> for Testers'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Основы работы с Kafka для тестирования event-driven систем",
+        what:"Что это", breakdown:"Ключевые понятия", custom:"Как применить в своей работе" },
+  en: { back:"← Home", footer:"Kafka basics for testing event-driven systems",
+        what:"What it is", breakdown:"Key concepts", custom:"How to apply it in your work" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Topic & Partition", name:"Тема и партиции", cat:"Основы",
    body:`<span class="topic">orders.created</span> (топик, 3 партиции)
 
@@ -389,12 +415,175 @@ Partition  Latest offset  Committed  <span class="bad">Lag</span>
    ],
    custom:"Для автотестов <b>вашего</b> сервиса-потребителя, где важна реальная семантика Kafka (партиционирование, rebalance, offset) — предпочитайте Testcontainers простым mock-библиотекам: баги, связанные с реальным поведением брокера, mock просто не воспроизведёт.",
    tip:"Такой тест требует Docker в среде выполнения (включая CI) — убедитесь, что раннеры CI поддерживают Docker-in-Docker или аналог, прежде чем закладывать Testcontainers в пайплайн."}
-];
+],
+en: [
+  {cmd:"Topic & Partition", name:"Topics and Partitions", cat:"Basics",
+   body:`<span class="topic">orders.created</span> (topic, 3 partitions)
+
+Partition 0: [msg1] [msg4] [msg7]
+Partition 1: [msg2] [msg5]
+Partition 2: [msg3] [msg6] [msg8]`,
+   what:"A Topic is a named stream of messages (think of it as a 'subject' or 'queue'), e.g. orders.created. Internally it's physically split into several partitions — that's what gives Kafka its parallelism: different partitions can be read and written at the same time.",
+   breakdown:[
+     {c:"Topic", e:"the logical name of an event stream that consumers subscribe to"},
+     {c:"Partition", e:"a piece of a topic; messages within one partition are always stored strictly in arrival order"},
+     {c:"Replication factor", e:"how many copies of each partition are stored on different brokers — for fault tolerance"}
+   ],
+   custom:"Ask developers for the list of topics in <b>your</b> system related to the functionality under test (usually named after the event's meaning: orders.created, payment.failed) — this is your map of everything happening asynchronously in the system.",
+   tip:"A topic's partition count can't be safely decreased after creation — worth keeping in mind when testing infrastructure changes."},
+
+  {cmd:"Producer", name:"Publishing a Message", cat:"Basics",
+   body:`<span class="fn">producer.send</span>(<span class="str">"orders.created"</span>, {
+  <span class="jkey">key</span>: <span class="str">"order-1051"</span>,
+  <span class="jkey">value</span>: { orderId: <span class="num">1051</span>, total: <span class="num">59.9</span> }
+});
+
+<span class="ok">✓</span> delivered to partition 1, offset 884`,
+   what:"A Producer is a component (a service or a test script) that publishes messages to a topic. For a tester, being able to publish a test message to Kafka yourself is a way to check a consuming service's reaction without waiting for real business logic to generate the event.",
+   breakdown:[
+     {c:"key", e:"the message key — determines which partition it lands in (see the 'Message Key' card)"},
+     {c:"value", e:"the payload — the message itself, usually JSON/Avro"},
+     {c:"offset in the response", e:"the position where the message actually got stored in the partition"}
+   ],
+   custom:"To test the consuming service in <b>your</b> system, write a small test producer (or use the CLI, see that card) — send a deliberately invalid message and check that the consumer handles the error correctly instead of silently failing.",
+   tip:"Test not just the 'happy path' with a valid message, but edge cases too: a missing field, the wrong data type, an empty value — that's where the most interesting event-processing bugs live."},
+
+  {cmd:"Consumer & Group", name:"Consumers and Consumer Groups", cat:"Basics",
+   body:`group: <span class="topic">order-notification-service</span>
+
+Partition 0 → Consumer A
+Partition 1 → Consumer B
+Partition 2 → Consumer B
+
+<span class="com">// each message is processed by exactly one consumer in the group</span>`,
+   what:"A Consumer reads messages from a topic. A Consumer Group is a logical grouping of several instances of the same service: Kafka distributes partitions among them so that each message is processed by only one of them — this is what gives horizontal scaling of processing.",
+   breakdown:[
+     {c:"Consumer", e:"a single process/instance reading messages from one or more partitions"},
+     {c:"Consumer Group ID", e:"the name grouping several service instances into one logical consuming group"},
+     {c:"Rebalance", e:"reassigning partitions among group members when a consumer is added or removed"}
+   ],
+   custom:"If testing scaling for <b>your</b> consuming service, check its behavior during a rebalance: start a second instance of the same service with the same group ID and confirm messages aren't processed twice or lost while partitions are being reassigned.",
+   tip:"If two services both need to receive EVERY message in a topic independently (not share the load), they need DIFFERENT group IDs — otherwise Kafka will split the messages between them instead of duplicating them."},
+
+  {cmd:"Offset", name:"Read Position", cat:"Basics",
+   body:`Partition 0: [0][1][2][3][4][5][6]
+                          ▲
+                    committed offset = 4
+                    (consumer has read 0-4,
+                     next message is 5)`,
+   what:"An Offset is a message's sequence number within a partition. A consumer group remembers (\"commits\") up to which offset messages have already been processed — this lets it resume exactly where it left off after a restart, instead of re-reading everything or skipping new messages.",
+   breakdown:[
+     {c:"Committed offset", e:"the position Kafka considers 'confirmed processed' for this consumer group"},
+     {c:"earliest / latest", e:"the starting strategy for a new consumer with no saved offset — read from the very start, or only new messages"},
+     {c:"Reset offset", e:"manually moving the read position backward — forces the consumer to re-read already-processed messages"}
+   ],
+   custom:"To test the idempotency of <b>your</b> consuming service, reset its consumer group's offset backward (kafka-consumer-groups --reset-offsets) and let it reprocess messages it's already seen — it shouldn't duplicate the result (another order, a duplicate email, etc.).",
+   warn:"Resetting an offset in production forces the consumer to reprocess a potentially huge number of old messages — do this deliberately, and only in test environments, unless you're certain of the consequences."},
+
+  {cmd:"Message Key & Order", name:"Key & Order Guarantee", cat:"Data",
+   body:`key = <span class="str">"order-1051"</span> → always partition 1
+key = <span class="str">"order-1052"</span> → always partition 2
+
+<span class="ok">✓</span> every event for ONE order
+   is guaranteed to arrive in order`,
+   what:"Kafka only guarantees message order within a single partition, not across an entire topic. A message's key determines which partition it lands in (a hash of the key) — so every message with the same key always goes to the same partition and is processed in strict order.",
+   breakdown:[
+     {c:"key = null", e:"messages are distributed across partitions round-robin — order between them is NOT guaranteed"},
+     {c:"key = order_id (for example)", e:"every event for one order (created/paid/shipped) lands in the same partition, in the right order"}
+   ],
+   custom:"If a bug in <b>your</b> system looks like '\"paid\" was processed before \"created\"', the first thing to check is whether a key is used at all when publishing, and whether it's the same key for related events of one business entity.",
+   tip:"Deliberately send a few events with no key (key=null) to a multi-partition topic in a test — a good way to demonstrate, and document, that order between them really isn't guaranteed."},
+
+  {cmd:"CLI tools", name:"Console Consumer/Producer", cat:"Tools",
+   line:"kafka-console-consumer --bootstrap-server localhost:9092 --topic orders.created --from-beginning",
+   out:"{\"orderId\":1050,\"total\":22.00}\n{\"orderId\":1051,\"total\":59.90}",
+   what:"Kafka's built-in console utilities let you manually read messages from a topic, or send them into one, with no code. For a tester this is the fastest way to 'peek' into a topic and check what's actually there during manual testing.",
+   breakdown:[
+     {c:"kafka-console-consumer", e:"reads and prints messages from the given topic to the console"},
+     {c:"--from-beginning", e:"read from the very start of the topic, not just new messages from now on"},
+     {c:"kafka-console-producer", e:"the reverse utility — lets you manually type and send messages into a topic from the console"}
+   ],
+   custom:"Replace <b>localhost:9092</b> with the broker address of <b>your</b> test Kafka cluster, and <b>orders.created</b> with the real topic name. Run the consumer in a separate window before performing a UI action — you'll see the generated event live.",
+   tip:"GUI tools (Kafka UI, Offset Explorer/Kafka Tool, Conduktor) give you the same thing more conveniently — with filters, topic search, and schema viewing; worth learning one for everyday use."},
+
+  {cmd:"Schema Registry", name:"Validating Message Format", cat:"Data",
+   body:`Schema v2 for <span class="topic">orders.created</span>:
+
+{
+  orderId: int,
+  total: double,
+  <span class="ok">+ couponCode: string (optional)</span> <span class="com">// added in v2</span>
+}
+
+<span class="ok">✓</span> BACKWARD compatible with v1`,
+   what:"A Schema Registry stores versions of a message's structure (schema), usually in Avro or Protobuf format, and checks whether a new schema is compatible with the old one on changes. It stops a producer from sending a message that structurally breaks the contract existing consumers expect.",
+   breakdown:[
+     {c:"BACKWARD compatibility", e:"new messages can be read by old consumer code (e.g. a new field is optional)"},
+     {c:"FORWARD compatibility", e:"old messages can be read by new consumer code"},
+     {c:"Breaking change", e:"a change that breaks compatibility — e.g. removing a required field or changing its type"}
+   ],
+   custom:"When developers on <b>your</b> team change the structure of Kafka events, check the Schema Registry UI for which compatibility type is declared for the topic, and whether the change really satisfies it, before it ships to production and breaks other consuming services.",
+   tip:"If a system has no Schema Registry and messages are just 'raw' JSON with no schema, that's itself an architectural risk — worth explicitly discussing with the team how you test format compatibility."},
+
+  {cmd:"Dead Letter Queue", name:"Queue for Failed Messages", cat:"Reliability",
+   body:`<span class="topic">orders.created</span> → Consumer
+                        │
+                   <span class="bad">processing error</span>
+                   (after 3 retries)
+                        ▼
+              <span class="topic">orders.created.DLQ</span>`,
+   what:"When a consumer can't process a message after several attempts (e.g. due to invalid data), instead of retrying forever or losing the message, it's sent to a separate 'holding' topic (a DLQ) for later manual review or automatic replay.",
+   breakdown:[
+     {c:"Retry policy", e:"how many times and with what delay the consumer retries before giving up"},
+     {c:"Dead Letter Queue (DLQ)", e:"a separate topic that unprocessable messages land in"},
+     {c:"Poison message", e:"a message that ALWAYS triggers a processing error (e.g. broken JSON) — the main candidate to end up in a DLQ"}
+   ],
+   custom:"Test a deliberately 'poisoned' message in <b>your</b> system (e.g. invalid JSON or one that breaks the schema) — confirm it doesn't send the consumer into an infinite crash loop, and correctly lands in the DLQ after the configured number of retries.",
+   tip:"Also check that the DLQ is actually monitored — messages that land there and get forgotten mean silently 'lost' business events (unsent emails, undelivered orders)."},
+
+  {cmd:"Consumer Lag", name:"Consumer Lag", cat:"Monitoring",
+   body:`Topic: <span class="topic">orders.created</span>, Group: notification-service
+
+Partition  Latest offset  Committed  <span class="bad">Lag</span>
+0          1204           1198       <span class="bad">6</span>
+1          980            450        <span class="bad">530</span>  ← growing!`,
+   what:"Lag is the gap between the last message actually published to a partition and how far the consumer has read. Growing lag means the consumer can't keep up with the incoming stream — a classic sign of performance trouble in an asynchronous system.",
+   breakdown:[
+     {c:"Latest offset", e:"the position of the last message published to the partition"},
+     {c:"Committed offset", e:"the position the consumer has read and confirmed up to"},
+     {c:"Lag = Latest - Committed", e:"how many messages are still unprocessed; steady growth is a warning sign"}
+   ],
+   custom:"During load testing of <b>your</b> event-driven system, watch the consuming service's lag the same way you'd watch CPU/memory — growing lag under steady incoming load means the consumer can't keep up and a backlog of unprocessed events is piling up.",
+   tip:"kafka-consumer-groups --describe --group <name> shows lag per partition straight from the command line, with no separate UI tool needed."},
+
+  {cmd:"Testcontainers", name:"Kafka in Automated Tests", cat:"Automation",
+   code:`<span class="kw">const</span> kafka = <span class="kw">new</span> <span class="fn">KafkaContainer</span>()
+  .<span class="fn">withExposedPorts</span>(<span class="num">9093</span>);
+<span class="kw">await</span> kafka.<span class="fn">start</span>();
+
+<span class="com">// tests run against a real,</span>
+<span class="com">// but temporary, Kafka instance</span>`,
+   what:"Testcontainers spins up a real (not mocked) Kafka instance in a Docker container specifically for one test run — the container is destroyed once the tests finish. This gives you real Kafka realism without needing a shared test cluster that other tests might hog or break.",
+   breakdown:[
+     {c:"KafkaContainer", e:"a ready-made class from the Testcontainers library that spins up a Kafka image in Docker"},
+     {c:"withExposedPorts", e:"which container port to expose, so test code can connect to it"},
+     {c:"start() / stop()", e:"the container's lifecycle — usually started before the test suite and torn down afterward"}
+   ],
+   custom:"For automated tests of <b>your</b> consuming service where Kafka's real semantics matter (partitioning, rebalance, offsets), prefer Testcontainers over simple mock libraries — a mock simply won't reproduce bugs tied to the broker's real behavior.",
+   tip:"This kind of test needs Docker in the execution environment (including CI) — confirm your CI runners support Docker-in-Docker or an equivalent before building Testcontainers into the pipeline."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -435,13 +624,13 @@ function render(i){
     <div class="section-title">📨 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Что это</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Ключевые понятия</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -453,7 +642,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

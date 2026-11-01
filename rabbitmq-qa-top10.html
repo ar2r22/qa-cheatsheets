@@ -32,15 +32,23 @@
   }
   .wrap{max-width:880px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:19px;
     text-align:center;
@@ -166,7 +174,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -178,7 +186,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -219,24 +226,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>RabbitMQ</span> для тестировщика</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>RabbitMQ</span> для тестировщика</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Основы работы с RabbitMQ для тестирования асинхронных систем</div>
+  <div class="footer" id="pageFooter">Основы работы с RabbitMQ для тестирования асинхронных систем</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>RabbitMQ</span> для тестировщика',
+  en: 'Top 10 <span>RabbitMQ</span> for Testers'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Основы работы с RabbitMQ для тестирования асинхронных систем",
+        what:"Что это", breakdown:"Ключевые понятия", custom:"Как применить в своей работе" },
+  en: { back:"← Home", footer:"RabbitMQ basics for testing asynchronous systems",
+        what:"What it is", breakdown:"Key concepts", custom:"How to apply it in your work" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"Exchange", name:"Типы обменников", cat:"Основы",
    body:`<span class="ex">orders.exchange</span> (type: <span class="str">topic</span>)
 
@@ -389,12 +415,173 @@ msg опубликован в 10:00:00
    ],
    custom:"Если в <b>вашей</b> системе есть время-чувствительные события (например 'код подтверждения действителен 5 минут') — проверьте, настроен ли TTL на соответствующей очереди/сообщении, и что по истечении времени оно действительно не обрабатывается как актуальное (либо вообще удаляется/уходит в DLQ).",
    tip:"Тестируйте граничные случаи: сообщение, обработанное за мгновение до истечения TTL, должно пройти нормально; сразу после истечения — не должно обработаться как валидное."}
-];
+],
+en: [
+  {cmd:"Exchange", name:"Exchange Types", cat:"Basics",
+   body:`<span class="ex">orders.exchange</span> (type: <span class="str">topic</span>)
+
+routing key <span class="str">"order.created"</span>
+         │
+         ▼ matches "order.*"
+   <span class="q">order-notify-queue</span>`,
+   what:"An Exchange is the entry point for a message into RabbitMQ. A producer never sends a message directly to a queue, only to an exchange — the exchange then decides (based on its type and rules) which queues to route it to.",
+   breakdown:[
+     {c:"direct", e:"the message goes to a queue if the routing key matches EXACTLY"},
+     {c:"topic", e:"the routing key is matched against a pattern with wildcards (order.*, *.failed)"},
+     {c:"fanout", e:"the message is broadcast to EVERY bound queue, the routing key is ignored"},
+     {c:"headers", e:"routing based on message headers instead of the routing key"}
+   ],
+   custom:"Ask developers which exchange type is used in <b>your</b> system for the flow under test — this determines what routing behavior you should be checking (e.g. with fanout, every subscriber should get a copy, not just one).",
+   tip:"If a message 'disappeared' and landed in no queue at all, the first thing to check is whether the routing key matches the conditions of the exchange's existing bindings."},
+
+  {cmd:"Queue", name:"Message Queue", cat:"Basics",
+   body:`<span class="q">order-notify-queue</span>
+
+[msg1] [msg2] [msg3] → ready
+            consumer reads FIFO`,
+   what:"A Queue is a buffer where messages physically sit until a consumer picks them up. Unlike Kafka, where messages stay in the topic even after being read, in a classic RabbitMQ queue a message is normally removed once it's successfully acknowledged (ack).",
+   breakdown:[
+     {c:"ready", e:"messages waiting to be delivered to some consumer"},
+     {c:"unacked", e:"messages already delivered to a consumer but not yet confirmed (ack)"},
+     {c:"FIFO within a queue", e:"order is preserved within a single queue (unlike distribution across several consumers)"}
+   ],
+   custom:"In <b>your</b> RabbitMQ's Management UI (usually http://host:15672), find your service's queue and watch the ready/unacked counters during a test — stuck unacked messages point to a problem with processing confirmation.",
+   tip:"If there are many queues with complex names, use the search/filter in the Management UI instead of scrolling a long list by hand."},
+
+  {cmd:"Binding & Routing Key", name:"Bindings & Routing Keys", cat:"Basics",
+   body:`<span class="ex">orders.exchange</span>
+   │ binding: routing key pattern "order.#"
+   ▼
+<span class="q">audit-log-queue</span>
+
+<span class="com">// sent with key "order.created.eu"</span>
+<span class="ok">✓</span> # matches any number of words`,
+   what:"A Binding is a rule linking an exchange to a specific queue, with a condition (a routing key or pattern) determining which messages that queue receives. One queue can have several bindings, including to different exchanges.",
+   breakdown:[
+     {c:"routing key", e:"a label string the producer attaches when sending a message (e.g. order.created)"},
+     {c:"* in a pattern (topic exchange)", e:"stands in for exactly one word in the key"},
+     {c:"# in a pattern (topic exchange)", e:"stands in for zero or more words"}
+   ],
+   custom:"If you expect an event from <b>your</b> service to land in a specific queue but it doesn't, open the exchange's Bindings tab in the Management UI and compare the pattern against the real routing key of the sent message.",
+   tip:"A typo in the routing key (order.created instead of orders.created) is one of the most common causes of 'the message was sent, but nobody received it' — and from the outside it looks like a silent failure with no errors."},
+
+  {cmd:"Publisher", name:"Sending a Test Message", cat:"Tools",
+   code:`channel.<span class="fn">publish</span>(
+  <span class="str">'orders.exchange'</span>,
+  <span class="str">'order.created'</span>,
+  Buffer.<span class="fn">from</span>(JSON.<span class="fn">stringify</span>({ orderId: <span class="num">1051</span> })),
+  { persistent: <span class="kw">true</span> }
+);`,
+   out:"Message published to orders.exchange",
+   what:"A Publisher is code (or a test script) that sends a message to an exchange. For a tester, being able to publish a test message yourself is a way to check a consumer's reaction directly, without having to run the full business scenario through the UI.",
+   breakdown:[
+     {c:"exchange, routing key", e:"where the message is sent, and with what key"},
+     {c:"Buffer / message body", e:"the payload — usually JSON, serialized into bytes"},
+     {c:"persistent: true", e:"a flag saying the message should be saved to disk, not just kept in memory (see the Durability card)"}
+   ],
+   custom:"To test <b>your</b> service's consumer, write a small publisher script (in any language with a RabbitMQ client) or use the Management UI (a queue's tab → 'Publish message') — faster than reproducing the whole UI scenario just to trigger one event.",
+   tip:"Via the Management UI you can publish a message manually right in the browser — handy for a one-off quick check with no code needed."},
+
+  {cmd:"Consumer & Ack", name:"Processing Confirmation", cat:"Reliability",
+   body:`Consumer receives msg1
+
+<span class="com">processed successfully →</span> <span class="ok">ack</span>  → removed from the queue
+<span class="com">processing error →</span>  <span class="bad">nack</span> → requeue=true → goes back to the queue`,
+   what:"After receiving a message, a consumer must explicitly confirm (ack) that it processed it successfully — only then does RabbitMQ remove the message from the queue. If there's no confirmation (the consumer crashed, or explicitly sent a nack), the message goes back to the queue for reprocessing.",
+   breakdown:[
+     {c:"ack", e:"confirmation of successful processing — the message is finally removed"},
+     {c:"nack / reject", e:"an explicit refusal to process — you can specify requeue: send it back to the queue, or drop it"},
+     {c:"auto-ack (a dangerous mode)", e:"the message is considered processed the instant it's received, BEFORE real processing — risks loss if the consumer crashes"}
+   ],
+   custom:"Test a scenario in <b>your</b> consuming service: the consumer receives a message and crashes (artificially, e.g. kill -9) BEFORE calling ack — the message should go back to the queue and be reprocessed, not get lost.",
+   warn:"Auto-ack mode is often used 'for simplicity' early in development, but it means a message is lost for good if the service crashes mid-processing — make sure to confirm with developers which mode is in use."},
+
+  {cmd:"Dead Letter Exchange", name:"Handling Undeliverable Messages", cat:"Reliability",
+   body:`<span class="q">order-queue</span>
+   │ message rejected (nack, requeue=false)
+   │ or TTL expired
+   ▼
+<span class="ex">orders.dlx</span> → <span class="q">order-queue.dead</span>`,
+   what:"The RabbitMQ equivalent of a Kafka DLQ: a queue can be set up so that messages that couldn't be processed (an explicit reject with no requeue, exceeding the retry count, TTL expiry) are automatically redirected to a separate 'dead letter' exchange and queue for later review.",
+   breakdown:[
+     {c:"x-dead-letter-exchange", e:"a queue argument specifying where to route 'problem' messages"},
+     {c:"x-dead-letter-routing-key", e:"optional — which routing key to use when forwarding to the dead letter exchange"},
+     {c:"Reasons for dead-lettering", e:"an explicit reject/nack with no requeue, TTL expiry, a full queue (if a limit is configured)"}
+   ],
+   custom:"Test a deliberately 'bad' message (e.g. one that breaks the expected format) in <b>your</b> service's queue — confirm it doesn't get stuck in an endless nack→requeue→nack loop, but ends up in the dead letter queue for review.",
+   tip:"If your project's queue has no dead letter exchange configured, 'broken' messages on error simply bounce back into the queue forever, which can create a load loop on the consumer — worth raising with developers as a risk."},
+
+  {cmd:"Durability", name:"Surviving a Restart", cat:"Reliability",
+   table:[
+     ["Setting","Survives a broker restart?"],
+     ["durable queue + persistent message","<span class='ok'>yes</span>"],
+     ["durable queue + NOT persistent message","<span class='bad'>no</span>, messages are lost"],
+     ["NOT durable (transient) queue","<span class='bad'>no</span>, the queue itself disappears"]
+   ],
+   what:"Durability determines whether a queue and the messages in it survive a RabbitMQ broker restart or crash. Both conditions are needed at once: the queue must be created as durable, AND every message must be sent with the persistent flag.",
+   breakdown:[
+     {c:"durable (queue)", e:"the queue's own structure is saved to disk and survives a broker restart"},
+     {c:"persistent (message)", e:"a specific message is written to disk instead of living only in memory"}
+   ],
+   custom:"For critical flows in <b>your</b> project (payments, orders), test a broker-restart scenario (on a test environment!) with messages sitting in the queue — if either durability condition isn't configured, you'll lose data on any RabbitMQ failure or upgrade.",
+   warn:"Durable + persistent is slower (disk writes), so developers sometimes deliberately trade it away for speed on non-critical queues — it just needs to be a conscious decision, not a forgotten default."},
+
+  {cmd:"Management UI", name:"Web Monitoring Interface", cat:"Tools",
+   body:`http://localhost:15672
+
+Queues:
+<span class="q">order-queue</span>     ready: 12   unacked: 2
+<span class="q">payment-queue</span>   ready: 0    unacked: 0
+<span class="q">order-queue.dead</span> ready: 3  <span class="bad">← dead letters present</span>`,
+   what:"RabbitMQ's built-in web dashboard for visual monitoring: a list of queues and exchanges, their state, throughput graphs, and the ability to manually publish or pull (and view) a message from a queue right in the browser.",
+   breakdown:[
+     {c:"localhost:15672", e:"the default address; login/password is usually guest/guest locally (your own elsewhere)"},
+     {c:"Get message(s)", e:"a button on a queue that lets you view message contents without republishing them"},
+     {c:"Purge", e:"completely clear every message from a queue — handy before a clean test run"}
+   ],
+   custom:"Bookmark the Management UI address of <b>your</b> test environment — it's the first place to check when you suspect an asynchronous-processing issue, before asking a developer for logs.",
+   tip:"The 'Get message(s)' button by default removes a message from the queue WITHOUT putting it back (unless you enable 'Requeue') — be careful viewing messages in a shared test environment so you don't accidentally 'eat' a message someone else needs."},
+
+  {cmd:"Prefetch Count", name:"Controlling Load on a Consumer", cat:"Performance",
+   body:`channel.<span class="fn">prefetch</span>(<span class="num">1</span>)
+
+<span class="com">// the consumer gets one message at a time</span>
+<span class="com">// the next one only after the previous ack</span>`,
+   what:"Prefetch count limits how many UNconfirmed (unacked) messages the broker can hand a single consumer at once. With no limit, a consumer can choke, receiving thousands of messages before it manages to process them.",
+   breakdown:[
+     {c:"prefetch = 1", e:"the consumer processes strictly one message at a time — slower, but predictable and fair across multiple consumers"},
+     {c:"prefetch = N (a large number)", e:"higher throughput, but risks overloading one consumer with a big batch at once"}
+   ],
+   custom:"During load testing of <b>your</b> consuming service, try different prefetch values and watch the load balance across several consumer instances — too high a prefetch can mean one consumer grabs 'the whole stream' while the others sit idle.",
+   tip:"If you see several running instances of the same consumer processing messages very unevenly, prefetch settings are one of the first things to check."},
+
+  {cmd:"TTL", name:"Message Time-to-Live", cat:"Data",
+   body:`x-message-ttl: <span class="num">60000</span> <span class="com">// 60 seconds</span>
+
+msg published at 10:00:00
+unprocessed by 10:01:00
+         ▼
+<span class="bad">deleted</span> (or sent to Dead Letter, if a DLX is configured)`,
+   what:"TTL (Time To Live) sets the maximum time a message can sit in a queue before being automatically deleted (or redirected to dead letter, if one is configured). It can be set for a specific message, or for an entire queue.",
+   breakdown:[
+     {c:"x-message-ttl (on the queue)", e:"applies equally to EVERY message in that queue"},
+     {c:"expiration (on the message)", e:"an individual TTL for a specific message at publish time, overriding the queue's setting"}
+   ],
+   custom:"If <b>your</b> system has time-sensitive events (e.g. 'this confirmation code is valid for 5 minutes'), check whether TTL is configured on the relevant queue/message, and that once it expires the message really isn't processed as current (or is removed/sent to a DLQ).",
+   tip:"Test the edge cases: a message processed an instant before TTL expiry should go through fine; one checked right after expiry should not be treated as valid."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -434,13 +621,13 @@ function render(i){
     <div class="section-title">🐇 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Что это</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Ключевые понятия</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -452,7 +639,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

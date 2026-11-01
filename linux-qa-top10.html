@@ -31,15 +31,23 @@
   }
   .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px;}
 
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);text-decoration:none;
-    font-size:12px;margin-bottom:14px;
+    font-size:12px;
     border:1px solid var(--panel-border);
     padding:5px 10px;border-radius:8px;
     transition:border-color .15s, color .15s;
   }
   .back-link:hover{border-color:var(--cyan);color:var(--cyan);}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   h1{
     font-size:21px;
     text-align:center;
@@ -153,7 +161,7 @@
     border-radius:8px;
     padding:10px;
   }
-  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;}
+  .brow{display:flex;gap:8px;font-size:12px;line-height:1.4;flex-wrap:wrap;}
   .brow code{
     color:var(--cyan);
     background:#0e1a22;
@@ -165,7 +173,6 @@
     word-break:break-word;
     font-weight:700;
   }
-  .brow{flex-wrap:wrap;}
   .brow .expl{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 
   .custom{
@@ -206,24 +213,43 @@
       position:static;
       width:100%;
     }
-  
     .panel{width:100%;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" href="index.html">← На главную</a>
-  <h1>Top 10 <span>Linux</span> для тестировщиков</h1>
+  <div class="topbar">
+    <a class="back-link" href="index.html" id="backLink">← На главную</a>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <h1 id="pageTitle">Top 10 <span>Linux</span> для тестировщиков</h1>
   <div class="layout">
     <div class="list" id="list"></div>
     <div class="panel" id="panel"></div>
   </div>
-  <div class="footer">Linux-команды, полезные в повседневной работе QA</div>
+  <div class="footer" id="pageFooter">Linux-команды, полезные в повседневной работе QA</div>
 </div>
 
 <script>
-const tools = [
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const pageTitleHTML = {
+  ru: 'Top 10 <span>Linux</span> для тестировщиков',
+  en: 'Top 10 <span>Linux</span> Commands for Testers'
+};
+
+const labels = {
+  ru: { back:"← На главную", footer:"Linux-команды, полезные в повседневной работе QA",
+        what:"Для чего нужно", breakdown:"Разбор команды", custom:"Как применить в своей работе" },
+  en: { back:"← Home", footer:"Linux commands useful in everyday QA work",
+        what:"When to use it", breakdown:"Command breakdown", custom:"How to apply it in your work" }
+};
+
+const toolsData = {
+ru: [
   {cmd:"grep", name:"Поиск в логах", cat:"Логи",
    line:"grep -i \"error\" app.log",
    out:"09:02:14 ERROR db connection timeout\n09:05:40 Error: payment failed",
@@ -343,12 +369,140 @@ const tools = [
    ],
    custom:"Запустите htop в отдельном окне терминала во время прогона нагрузочного теста <b>вашего</b> приложения — если CPU/память упираются в 100%, это объясняет деградацию времени ответа в результатах теста.",
    tip:"В htop нажмите F6, чтобы отсортировать процессы по использованию CPU или памяти и сразу увидеть 'тяжёлый' процесс."}
-];
+],
+en: [
+  {cmd:"grep", name:"Searching Logs", cat:"Logs",
+   line:"grep -i \"error\" app.log",
+   out:"09:02:14 ERROR db connection timeout\n09:05:40 Error: payment failed",
+   what:"Searches for lines containing a given text or pattern in a file or stream. For a tester this is the main tool for quickly finding the right error in a log with thousands of lines, without opening the file by hand.",
+   breakdown:[
+     {c:"-i", e:"ignore case (matches ERROR, error, and Error alike)"},
+     {c:"\"error\"", e:"the string or regular expression to search for"},
+     {c:"app.log", e:"the file to search in"}
+   ],
+   custom:"Replace <b>app.log</b> with the real path to <b>your</b> app's log (often /var/log/..., or a container's log). Add <code>-n</code> to see line numbers, <code>-C 3</code> to show 3 lines of context around a match.",
+   tip:"grep -r \"text\" ./logs/ — a recursive search across every file in a folder, handy when there are several logs."},
+
+  {cmd:"tail -f", name:"Live Log Monitoring", cat:"Logs",
+   line:"tail -f -n 50 app.log",
+   out:"09:10:01 INFO request received\n09:10:02 INFO response 200 OK\n[waiting for new lines...]",
+   what:"Shows the last lines of a file and keeps printing new lines as they appear — essential for watching a log 'live' during a manual test or an automated test run.",
+   breakdown:[
+     {c:"-f", e:"follow — keep running and print newly appended lines instead of exiting"},
+     {c:"-n 50", e:"show the last 50 lines first, instead of the whole file"}
+   ],
+   custom:"Run this in a separate terminal before reproducing a bug in <b>your</b> app — you'll see exactly the log lines that appeared at the moment of the issue.",
+   tip:"Ctrl+C stops following the file; the file itself is left unchanged."},
+
+  {cmd:"curl", name:"API Request", cat:"Network/API",
+   line:"curl -i -X POST https://api.site/login -d '{\"user\":\"a@b.com\"}' -H \"Content-Type: application/json\"",
+   out:"HTTP/1.1 200 OK\n{\"token\":\"eyJhbGciOi...\"}",
+   what:"Sends an HTTP request right from the terminal and shows the response — a fast way to check an API endpoint without writing code or opening Postman.",
+   breakdown:[
+     {c:"-i", e:"show response headers, not just the body"},
+     {c:"-X POST", e:"the request's HTTP method (GET by default)"},
+     {c:"-d '{...}'", e:"the request body"},
+     {c:"-H \"...\"", e:"a request header, e.g. the content type"}
+   ],
+   custom:"Replace the URL with a real endpoint of <b>your</b> API and the request body with data that's valid for it. For authorized requests, add <code>-H \"Authorization: Bearer &lt;token&gt;\"</code>.",
+   tip:"curl -o /dev/null -s -w \"%{http_code}\\n\" URL — prints only the HTTP status code, handy for quick smoke checks."},
+
+  {cmd:"ps / kill", name:"App Processes", cat:"Processes",
+   line:"ps aux | grep node",
+   out:"user   4821  0.3  1.2  node server.js\nuser   4822  0.1  0.4  node worker.js",
+   what:"ps lists running processes (what's running under which PID on the machine), kill sends a process a termination signal. Useful for checking that the service under test is actually running, or for restarting a 'stuck' process.",
+   breakdown:[
+     {c:"ps aux", e:"show every process from every user, with details (CPU, memory)"},
+     {c:"| grep node", e:"filter the output down to lines containing 'node'"},
+     {c:"kill -9 &lt;PID&gt;", e:"forcibly terminate a process by the PID taken from ps's output"}
+   ],
+   custom:"Replace <b>node</b> with <b>your</b> app's process name (java, python, nginx, etc.) — this finds its PID so you can confirm the service is alive before starting tests.",
+   warn:"kill -9 terminates a process immediately with no chance to close connections or save data cleanly — use it for diagnostics, not as a routine way to stop a service."},
+
+  {cmd:"netstat / ss", name:"Checking Ports", cat:"Network",
+   line:"ss -tulpn | grep 3000",
+   out:"tcp   LISTEN  0  128  0.0.0.0:3000  node",
+   what:"Shows which network ports are currently in use and by which process — a fast way to confirm the service under test is really listening, or figure out why a port is 'already in use'.",
+   breakdown:[
+     {c:"-t", e:"TCP connections only"},
+     {c:"-u", e:"include UDP"},
+     {c:"-l", e:"listening sockets only"},
+     {c:"-p", e:"show the PID and process name that holds the port"},
+     {c:"-n", e:"show numeric addresses/ports instead of resolving names — faster"}
+   ],
+   custom:"Replace <b>3000</b> with the port of <b>your</b> service under test. If you see 'Address already in use' when starting the app, this command shows which process has already grabbed that port.",
+   tip:"netstat is the older command with the same purpose; on modern distros, ss is the recommended choice."},
+
+  {cmd:"df / du", name:"Disk Space", cat:"System",
+   line:"df -h && du -sh ./test-artifacts",
+   out:"/dev/sda1   40G   32G   6G   85%   /\n2.3G  ./test-artifacts",
+   what:"df shows free space on disks/partitions, du shows the size of a specific folder/file. Useful when tests fail due to running out of space (e.g. while recording run videos or writing large logs).",
+   breakdown:[
+     {c:"df -h", e:"show disk usage in human-readable form (GB instead of bytes)"},
+     {c:"du -sh &lt;path&gt;", e:"total size (-s) of a specific folder, human-readable (-h)"}
+   ],
+   custom:"Run this on a CI runner or test server if automated tests start failing with unclear file-write errors — it's often just a full disk from old artifacts/screenshots.",
+   tip:"du -sh */ inside a test-artifacts folder quickly shows which specific subfolder is 'eating' space."},
+
+  {cmd:"chmod / chown", name:"File Permissions", cat:"Files",
+   line:"chmod +x run_tests.sh",
+   out:"-rwxr-xr-x  run_tests.sh",
+   what:"chmod changes a file's access permissions (read/write/execute), chown changes its owner. A common cause of 'Permission denied' when running test scripts on CI or someone else's machine.",
+   breakdown:[
+     {c:"+x", e:"add permission to execute the file as a program/script"},
+     {c:"chmod 644 file", e:"numeric form: owner can read/write, everyone else can only read"},
+     {c:"chown user:group file", e:"change the file's owner and group"}
+   ],
+   custom:"If <b>your</b> project's test-runner script reports 'Permission denied: ./run_tests.sh', run <code>chmod +x run_tests.sh</code> for that specific file.",
+   tip:"Git preserves a file's execute permission on commit — if a script loses +x after cloning, check your .gitattributes/repo settings."},
+
+  {cmd:"ssh / scp", name:"Server Access & File Copying", cat:"Remote Access",
+   line:"ssh user@192.168.1.10\nscp report.html user@192.168.1.10:/var/www/reports/",
+   out:"Connected to 192.168.1.10\nreport.html  100%  340KB  2.1MB/s",
+   what:"ssh opens a secure console on a remote machine (e.g. a test environment), scp copies files between your local machine and a server over that same secure channel.",
+   breakdown:[
+     {c:"ssh user@host", e:"connect to a remote server as the given user"},
+     {c:"scp file user@host:path", e:"copy a local file to a server, into the given folder"},
+     {c:"scp user@host:path .", e:"the reverse direction — download a file from the server to your machine"}
+   ],
+   custom:"Replace <b>user@192.168.1.10</b> with the real credentials and address of <b>your</b> test environment (usually provided by DevOps/your lead). This lets you, for example, pull server logs after a failed test for analysis.",
+   tip:"Set up SSH keys instead of a password (ssh-copy-id) — it speeds up and simplifies regular access to test environments."},
+
+  {cmd:"cat / less / head", name:"Viewing Files", cat:"Files",
+   line:"less app.log",
+   out:"(interactive view: arrow keys to scroll, / to search, q to quit)",
+   what:"Three ways to view a file's contents: cat dumps the whole file at once, head shows only the first lines, less opens the file for paginated/interactive viewing without loading it all into the terminal.",
+   breakdown:[
+     {c:"cat file", e:"print the entire file at once — fine for small files"},
+     {c:"head -n 20 file", e:"show the first 20 lines — a quick look at the start of a large file"},
+     {c:"less file", e:"paginated view with search (/text) — the best choice for large logs"}
+   ],
+   custom:"For large log files in <b>your</b> project, always prefer <code>less</code> over <code>cat</code> — cat on a multi-megabyte file will flood the terminal with text.",
+   tip:"Inside less, press Shift+F to switch to a tail -f-like mode (following new lines)."},
+
+  {cmd:"top / htop", name:"System Load", cat:"System",
+   line:"htop",
+   out:"CPU [||||||    42%]   MEM [||||||||  6.1G/16G]\nPID  USER  CMD\n4821 user  node server.js   38% CPU",
+   what:"Shows in real time how much CPU and memory processes are consuming — critical during load/stress testing, to see whether the service under test is 'choking'.",
+   breakdown:[
+     {c:"top", e:"preinstalled almost everywhere, a basic process-monitoring interface"},
+     {c:"htop", e:"a more convenient version with a colorized UI, click-to-sort, and process search"}
+   ],
+   custom:"Run htop in a separate terminal window while running a load test against <b>your</b> app — if CPU/memory hit 100%, that explains the response-time degradation in the test results.",
+   tip:"In htop, press F6 to sort processes by CPU or memory usage and spot the 'heavy' process immediately."}
+]
+};
 
 const list = document.getElementById('list');
 const panel = document.getElementById('panel');
+let currentIndex = 0;
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
 
 function render(i){
+  currentIndex = i;
+  const tools = toolsData[currentLang];
+  const L = labels[currentLang];
+
   list.innerHTML = tools.map((t,idx)=>`
     <div class="item ${idx===i?'active':''}" data-i="${idx}">
       <div class="badge">${idx+1}</div>
@@ -380,13 +534,13 @@ function render(i){
     <div class="section-title">🐧 ${t.cmd}</div>
     <div class="meta"><span class="category">${t.cat}</span></div>
 
-    <div class="block-title">Для чего нужно</div>
+    <div class="block-title">${L.what}</div>
     <div class="what">${t.what}</div>
 
-    <div class="block-title">Разбор команды</div>
+    <div class="block-title">${L.breakdown}</div>
     <div class="breakdown">${breakdownHTML}</div>
 
-    <div class="block-title">Как применить в своей работе</div>
+    <div class="block-title">${L.custom}</div>
     <div class="custom">${t.custom}</div>
 
     ${t.tip ? `<div class="tip">💡 ${t.tip}</div>` : ''}
@@ -398,7 +552,25 @@ function render(i){
   });
 }
 
-render(0);
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.getElementById('backLink').textContent = labels[lang].back;
+  document.getElementById('pageFooter').textContent = labels[lang].footer;
+  document.getElementById('pageTitle').innerHTML = pageTitleHTML[lang];
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+  const idx = Math.min(currentIndex, toolsData[lang].length - 1);
+  render(idx);
+}
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => applyLang(b.dataset.lang));
+});
+
+applyLang(currentLang);
 </script>
 </body>
 </html>

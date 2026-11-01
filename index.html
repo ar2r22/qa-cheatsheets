@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>QA Cheatsheets — главная</title>
+<title>QA Cheatsheets</title>
 <style>
   :root{
     --bg:#0a0e14;
@@ -29,7 +29,16 @@
     padding-bottom:env(safe-area-inset-bottom,0px);
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:920px;margin:0 auto;padding:28px 16px 48px;}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 16px 48px;}
+
+  .topbar{display:flex;justify-content:flex-end;margin-bottom:10px;}
+  .lang-toggle{display:inline-flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;}
+  .lang-toggle button{
+    background:transparent;border:none;color:var(--muted);font-family:inherit;
+    font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:.3px;
+  }
+  .lang-toggle button.active{background:var(--cyan);color:#06161c;}
+
   header{text-align:center;margin-bottom:34px;}
   h1{font-size:26px;margin:0 0 8px;letter-spacing:.2px;}
   h1 span{color:var(--cyan);}
@@ -104,37 +113,43 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="topbar">
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+
   <header>
     <h1>QA <span>Cheatsheets</span></h1>
-    <div class="subtitle">Памятки и шпаргалки для тестировщиков — от основ до автоматизации</div>
+    <div class="subtitle" data-i18n="subtitle"></div>
   </header>
 
   <div class="group" id="group-manual">
     <div class="group-head" data-target="group-manual">
       <span class="group-icon">🧪</span>
-      <span class="group-title manual">Ручное тестирование <span class="group-count">(3)</span></span>
+      <span class="group-title manual" data-i18n="group-manual-title"></span>
       <span class="group-line"></span>
       <span class="chevron">▾</span>
     </div>
-    <div class="group-desc">Основы профессии и повседневные инструменты ручного QA</div>
+    <div class="group-desc" data-i18n="group-manual-desc"></div>
     <div class="grid-wrap"><div class="grid-inner"><div class="grid">
       <a class="card manual-card" href="manual-qa-top10.html">
         <div class="icon">📋</div>
         <div class="title">Top 10 Manual Testing</div>
-        <div class="desc">Тест-кейсы, баг-репорты, исследовательское тестирование, техники тест-дизайна</div>
-        <div class="arrow">Открыть →</div>
+        <div class="desc" data-i18n="c-manual-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card manual-card" href="devtools-qa-top10.html">
         <div class="icon">🛠</div>
         <div class="title">Top 10 Chrome DevTools</div>
-        <div class="desc">Elements, Console, Network, Application, эмуляция устройств и сети</div>
-        <div class="arrow">Открыть →</div>
+        <div class="desc" data-i18n="c-devtools-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card manual-card" href="postman-api-top10.html">
         <div class="icon">📮</div>
         <div class="title">Top 10 API + Postman</div>
-        <div class="desc">Методы, окружения, авторизация, тесты, коллекции и Newman</div>
-        <div class="arrow">Открыть →</div>
+        <div class="desc" data-i18n="c-postman-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
     </div></div></div>
   </div>
@@ -142,59 +157,59 @@
   <div class="group" id="group-general">
     <div class="group-head" data-target="group-general">
       <span class="group-icon">🧩</span>
-      <span class="group-title general">Общие знания <span class="group-count">(8)</span></span>
+      <span class="group-title general" data-i18n="group-general-title"></span>
       <span class="group-line"></span>
       <span class="chevron">▾</span>
     </div>
-    <div class="group-desc">Инструменты и концепции, полезные и в ручном, и в автоматизированном тестировании</div>
+    <div class="group-desc" data-i18n="group-general-desc"></div>
     <div class="grid-wrap"><div class="grid-inner"><div class="grid">
       <a class="card" href="linux-qa-top10.html">
         <div class="icon">🐧</div>
-        <div class="title">Top 10 Linux для тестировщиков</div>
-        <div class="desc">grep, tail -f, curl, ps/kill, netstat, права доступа</div>
-        <div class="arrow">Открыть →</div>
+        <div class="title" data-i18n="c-linux-title"></div>
+        <div class="desc">grep, tail -f, curl, ps/kill, netstat, <span data-i18n="c-linux-desc-tail"></span></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="sql-qa-top10.html">
         <div class="icon">🗄</div>
-        <div class="title">Top 10 SQL для тестировщиков</div>
-        <div class="desc">SELECT, JOIN, подготовка и очистка тестовых данных, транзакции</div>
-        <div class="arrow">Открыть →</div>
+        <div class="title" data-i18n="c-sql-title"></div>
+        <div class="desc" data-i18n="c-sql-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="git-qa-top10.html">
         <div class="icon">🔀</div>
-        <div class="title">Top 10 Git для тестировщиков</div>
+        <div class="title" data-i18n="c-git-title"></div>
         <div class="desc">clone, status, branch, log, diff, bisect, blame</div>
-        <div class="arrow">Открыть →</div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="microservices-testing-top10.html">
         <div class="icon">🧬</div>
-        <div class="title">Тестирование микросервисов</div>
-        <div class="desc">Contract testing, трассировка, chaos engineering, идемпотентность</div>
-        <div class="arrow">Открыть →</div>
+        <div class="title" data-i18n="c-micro-title"></div>
+        <div class="desc" data-i18n="c-micro-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="kafka-qa-top10.html">
         <div class="icon">📨</div>
-        <div class="title">Top 10 Kafka для тестировщика</div>
+        <div class="title" data-i18n="c-kafka-title"></div>
         <div class="desc">Topic, offset, consumer group, Schema Registry, DLQ, lag</div>
-        <div class="arrow">Открыть →</div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="rabbitmq-qa-top10.html">
         <div class="icon">🐇</div>
-        <div class="title">Top 10 RabbitMQ для тестировщика</div>
+        <div class="title" data-i18n="c-rabbitmq-title"></div>
         <div class="desc">Exchange, binding, ack/nack, DLX, durability, TTL</div>
-        <div class="arrow">Открыть →</div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="k8s-qa-top10.html">
         <div class="icon">☸️</div>
-        <div class="title">Top 10 Kubernetes для тестировщика</div>
-        <div class="desc">Port-forward через Lens, логи, exec, ConfigMap, namespace</div>
-        <div class="arrow">Открыть →</div>
+        <div class="title" data-i18n="c-k8s-title"></div>
+        <div class="desc" data-i18n="c-k8s-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card" href="ai-prompts-qa-top10.html">
         <div class="icon">🤖</div>
-        <div class="title">Top 10 AI-промптов для QA</div>
-        <div class="desc">Готовые шаблоны промптов на каждый день с кнопкой Copy</div>
-        <div class="arrow">Открыть →</div>
+        <div class="title" data-i18n="c-ai-title"></div>
+        <div class="desc" data-i18n="c-ai-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
     </div></div></div>
   </div>
@@ -202,37 +217,122 @@
   <div class="group" id="group-automation">
     <div class="group-head" data-target="group-automation">
       <span class="group-icon">⚙️</span>
-      <span class="group-title automation">Автоматизация <span class="group-count">(2)</span></span>
+      <span class="group-title automation" data-i18n="group-automation-title"></span>
       <span class="group-line"></span>
       <span class="chevron">▾</span>
     </div>
-    <div class="group-desc">Фреймворки и инфраструктура для написания и поддержки автотестов</div>
+    <div class="group-desc" data-i18n="group-automation-desc"></div>
     <div class="grid-wrap"><div class="grid-inner"><div class="grid">
       <a class="card automation-card" href="playwright-ts-top10.html">
         <div class="icon">🎭</div>
         <div class="title">Top 10 Playwright + TS</div>
-        <div class="desc">Locators, fixtures, Page Object, API testing, CI-конфиг</div>
-        <div class="arrow">Открыть →</div>
+        <div class="desc" data-i18n="c-pw-desc"></div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
       <a class="card automation-card" href="git-automation-top10.html">
         <div class="icon">⚙️</div>
-        <div class="title">Git для автоматизации тестирования</div>
+        <div class="title" data-i18n="c-gitauto-title"></div>
         <div class="desc">.gitignore, tag, rebase, hooks, worktree, submodule, CI</div>
-        <div class="arrow">Открыть →</div>
+        <div class="arrow" data-i18n="open"></div>
       </a>
     </div></div></div>
   </div>
 
-  <footer>QA Cheatsheets · памятки для тестировщиков всех уровней · клик по заголовку раздела сворачивает/разворачивает его</footer>
+  <footer data-i18n="footer"></footer>
 </div>
 
 <script>
-  document.querySelectorAll('.group-head').forEach(head => {
-    head.addEventListener('click', () => {
-      const group = document.getElementById(head.dataset.target);
-      group.classList.toggle('collapsed');
-    });
+const LANG_KEY = 'qa-cheatsheets-lang';
+
+const i18n = {
+  ru: {
+    "subtitle": "Памятки и шпаргалки для тестировщиков — от основ до автоматизации",
+    "group-manual-title": "Ручное тестирование (3)",
+    "group-manual-desc": "Основы профессии и повседневные инструменты ручного QA",
+    "group-general-title": "Общие знания (8)",
+    "group-general-desc": "Инструменты и концепции, полезные и в ручном, и в автоматизированном тестировании",
+    "group-automation-title": "Автоматизация (2)",
+    "group-automation-desc": "Фреймворки и инфраструктура для написания и поддержки автотестов",
+    "open": "Открыть →",
+    "c-manual-desc": "Тест-кейсы, баг-репорты, исследовательское тестирование, техники тест-дизайна",
+    "c-devtools-desc": "Elements, Console, Network, Application, эмуляция устройств и сети",
+    "c-postman-desc": "Методы, окружения, авторизация, тесты, коллекции и Newman",
+    "c-linux-title": "Top 10 Linux для тестировщиков",
+    "c-linux-desc-tail": "права доступа",
+    "c-sql-title": "Top 10 SQL для тестировщиков",
+    "c-sql-desc": "SELECT, JOIN, подготовка и очистка тестовых данных, транзакции",
+    "c-git-title": "Top 10 Git для тестировщиков",
+    "c-micro-title": "Тестирование микросервисов",
+    "c-micro-desc": "Contract testing, трассировка, chaos engineering, идемпотентность",
+    "c-kafka-title": "Top 10 Kafka для тестировщика",
+    "c-rabbitmq-title": "Top 10 RabbitMQ для тестировщика",
+    "c-k8s-title": "Top 10 Kubernetes для тестировщика",
+    "c-k8s-desc": "Port-forward через Lens, логи, exec, ConfigMap, namespace",
+    "c-ai-title": "Top 10 AI-промптов для QA",
+    "c-ai-desc": "Готовые шаблоны промптов на каждый день с кнопкой Copy",
+    "c-pw-desc": "Locators, fixtures, Page Object, API testing, CI-конфиг",
+    "c-gitauto-title": "Git для автоматизации тестирования",
+    "footer": "QA Cheatsheets · памятки для тестировщиков всех уровней · клик по заголовку раздела сворачивает/разворачивает его"
+  },
+  en: {
+    "subtitle": "Cheatsheets for QA engineers — from the basics to automation",
+    "group-manual-title": "Manual Testing (3)",
+    "group-manual-desc": "Core skills and everyday tools for manual QA",
+    "group-general-title": "General Knowledge (8)",
+    "group-general-desc": "Tools and concepts useful in both manual and automated testing",
+    "group-automation-title": "Automation (2)",
+    "group-automation-desc": "Frameworks and infrastructure for writing and maintaining automated tests",
+    "open": "Open →",
+    "c-manual-desc": "Test cases, bug reports, exploratory testing, test design techniques",
+    "c-devtools-desc": "Elements, Console, Network, Application, device and network emulation",
+    "c-postman-desc": "Methods, environments, auth, tests, collections and Newman",
+    "c-linux-title": "Top 10 Linux Commands for Testers",
+    "c-linux-desc-tail": "file permissions",
+    "c-sql-title": "Top 10 SQL for Testers",
+    "c-sql-desc": "SELECT, JOIN, preparing and cleaning up test data, transactions",
+    "c-git-title": "Top 10 Git for Testers",
+    "c-micro-title": "Testing Microservices",
+    "c-micro-desc": "Contract testing, tracing, chaos engineering, idempotency",
+    "c-kafka-title": "Top 10 Kafka for Testers",
+    "c-rabbitmq-title": "Top 10 RabbitMQ for Testers",
+    "c-k8s-title": "Top 10 Kubernetes for Testers",
+    "c-k8s-desc": "Port-forwarding via Lens, logs, exec, ConfigMap, namespace",
+    "c-ai-title": "Top 10 AI Prompts for QA",
+    "c-ai-desc": "Ready-made daily prompt templates with a Copy button",
+    "c-pw-desc": "Locators, fixtures, Page Object, API testing, CI config",
+    "c-gitauto-title": "Git for Test Automation",
+    "footer": "QA Cheatsheets · cheatsheets for QA engineers of every level · click a section header to expand/collapse it"
+  }
+};
+
+function applyLang(lang){
+  document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[lang][key] !== undefined) el.textContent = i18n[lang][key];
   });
+  document.querySelectorAll('#langToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+}
+
+let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
+applyLang(currentLang);
+
+document.querySelectorAll('#langToggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    currentLang = b.dataset.lang;
+    applyLang(currentLang);
+  });
+});
+
+document.querySelectorAll('.group-head').forEach(head => {
+  head.addEventListener('click', () => {
+    const group = document.getElementById(head.dataset.target);
+    group.classList.toggle('collapsed');
+  });
+});
 </script>
 </body>
 </html>
